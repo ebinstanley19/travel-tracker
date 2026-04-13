@@ -19,13 +19,13 @@ const monthOrder = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-const sampleData = [];
+const sampleData: any[] = [];
 
-function safeText(value) {
+function safeText(value: unknown): string {
   return (value ?? "").toString().trim();
 }
 
-function formatMonth(dateStr) {
+function formatMonth(dateStr: string): string {
   if (!dateStr) return "";
   const d = new Date(dateStr);
   return Number.isNaN(d.getTime())
@@ -33,13 +33,13 @@ function formatMonth(dateStr) {
     : d.toLocaleString("en-US", { month: "long" });
 }
 
-function formatYear(dateStr) {
+function formatYear(dateStr: string): string {
   if (!dateStr) return "";
   const d = new Date(dateStr);
   return Number.isNaN(d.getTime()) ? "" : String(d.getFullYear());
 }
 
-function prettyDate(dateStr) {
+function prettyDate(dateStr: string): string {
   if (!dateStr) return "";
   const d = new Date(dateStr);
   return Number.isNaN(d.getTime())
@@ -47,11 +47,13 @@ function prettyDate(dateStr) {
     : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-function sortEntries(entries) {
-  return [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+function sortEntries(entries: any[]): any[] {
+  return [...entries].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
 }
 
-function exportToExcel(entries) {
+function exportToExcel(entries: any[]): void {
   const rows = sortEntries(entries).map((item) => ({
     Year: formatYear(item.date),
     Month: formatMonth(item.date),
@@ -69,8 +71,30 @@ function exportToExcel(entries) {
   XLSX.writeFile(wb, "travel-history.xlsx");
 }
 
-function parseWorkbook(file, onLoad) {
-  const monthMap = {
+interface TravelEntry {
+  id: string;
+  date: string;
+  from: string;
+  to: string;
+  country: string;
+  purpose: string;
+  notes: string;
+}
+
+type ParsedDateResult =
+  | { type: "single"; startDay: number }
+  | { type: "range"; startDay: number; endDay: number };
+
+function makeId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function parseWorkbook(file: File, onLoad: (entries: TravelEntry[]) => void): void {
+  const monthMap: Record<string, number> = {
     january: 1,
     february: 2,
     march: 3,
@@ -85,19 +109,19 @@ function parseWorkbook(file, onLoad) {
     december: 12,
   };
 
-  function pad(n) {
+  function pad(n: number): string {
     return String(n).padStart(2, "0");
   }
 
-  function makeDate(year, month, day) {
+  function makeDate(year: number, month: number, day: number): string {
     return `${year}-${pad(month)}-${pad(day)}`;
   }
 
-  function normalizePlace(value) {
+  function normalizePlace(value: unknown): string {
     return safeText(value);
   }
 
-  function parseDateCell(rawDate, currentMonthNumber) {
+  function parseDateCell(rawDate: unknown, currentMonthNumber: number): ParsedDateResult | null {
     if (rawDate === null || rawDate === undefined || rawDate === "") return null;
 
     if (typeof rawDate === "number") {
@@ -105,8 +129,6 @@ function parseWorkbook(file, onLoad) {
     }
 
     if (rawDate instanceof Date && !Number.isNaN(rawDate.getTime())) {
-      // Excel probably auto-converted something like 10-17 into a date.
-      // Reconstruct it as month-day from the cell itself.
       const monthFromCell = rawDate.getMonth() + 1;
       const dayFromCell = rawDate.getDate();
 
@@ -144,23 +166,27 @@ function parseWorkbook(file, onLoad) {
 
   const reader = new FileReader();
 
-  reader.onload = (e) => {
+  reader.onload = (e: ProgressEvent<FileReader>) => {
     const data = e.target?.result;
+    if (!data) return;
+
     const workbook = XLSX.read(data, { type: "array", cellDates: true });
+    const parsedEntries: TravelEntry[] = [];
 
-    const parsedEntries = [];
-
-    workbook.SheetNames.forEach((sheetName) => {
+    workbook.SheetNames.forEach((sheetName: string) => {
       const year = Number(sheetName);
       if (Number.isNaN(year)) return;
 
       const sheet = workbook.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+      const rows = XLSX.utils.sheet_to_json<(string | number | Date)[]>(sheet, {
+        header: 1,
+        defval: "",
+      });
 
       let currentMonth = "";
 
       for (let i = 3; i < rows.length; i++) {
-        const row = rows[i] || [];
+        const row: (string | number | Date)[] = rows[i] || [];
 
         const monthCell = safeText(row[0]);
         const dateCell = row[1];
@@ -182,7 +208,7 @@ function parseWorkbook(file, onLoad) {
 
         if (parsedDate.type === "single") {
           parsedEntries.push({
-            id: crypto.randomUUID(),
+            id: makeId(),
             date: makeDate(year, monthNumber, parsedDate.startDay),
             from: fromCell,
             to: toCell,
@@ -194,7 +220,7 @@ function parseWorkbook(file, onLoad) {
 
         if (parsedDate.type === "range") {
           parsedEntries.push({
-            id: crypto.randomUUID(),
+            id: makeId(),
             date: makeDate(year, monthNumber, parsedDate.startDay),
             from: fromCell,
             to: toCell,
@@ -204,7 +230,7 @@ function parseWorkbook(file, onLoad) {
           });
 
           parsedEntries.push({
-            id: crypto.randomUUID(),
+            id: makeId(),
             date: makeDate(year, monthNumber, parsedDate.endDay),
             from: toCell,
             to: fromCell,
@@ -222,8 +248,12 @@ function parseWorkbook(file, onLoad) {
   reader.readAsArrayBuffer(file);
 }
 
+interface EmptyStateProps {
+  onAdd: () => void;
+  onImport: () => void;
+}
 
-function EmptyState({ onAdd, onImport }) {
+function EmptyState({ onAdd, onImport }: EmptyStateProps) {
   return (
     <Card className="border-dashed shadow-sm rounded-2xl">
       <CardContent className="py-12 text-center">
@@ -249,8 +279,8 @@ export default function TravelHistoryTrackerApp() {
   const [countryFilter, setCountryFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
   const [open, setOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const fileInputRef = useRef(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState({
     date: "",
     from: "",
@@ -281,7 +311,7 @@ export default function TravelHistoryTrackerApp() {
   }, [entries, search, countryFilter, yearFilter]);
 
   const groupedByYearMonth = useMemo(() => {
-    const grouped = {};
+    const grouped: Record<string, Record<string, TravelEntry[]>> = {};
     filtered.forEach((entry) => {
       const year = formatYear(entry.date) || "Unknown Year";
       const month = formatMonth(entry.date) || "Unknown Month";
@@ -309,7 +339,7 @@ export default function TravelHistoryTrackerApp() {
     const totalTrips = entries.length;
     const yearsCovered = new Set(entries.map((e) => formatYear(e.date)).filter(Boolean)).size;
 
-    const countryCounts = entries.reduce((acc, item) => {
+    const countryCounts = entries.reduce<Record<string, number>>((acc, item) => {
       if (!item.country) return acc;
       acc[item.country] = (acc[item.country] || 0) + 1;
       return acc;
@@ -325,7 +355,7 @@ export default function TravelHistoryTrackerApp() {
     setOpen(true);
   }
 
-  function openEditModal(entry) {
+  function openEditModal(entry: TravelEntry): void {
     setEditingId(entry.id);
     setForm({
       date: entry.date || "",
@@ -349,11 +379,11 @@ export default function TravelHistoryTrackerApp() {
     setOpen(false);
   }
 
-  function deleteEntry(id) {
-    setEntries((prev) => prev.filter((e) => e.id !== id));
+  function deleteEntry(id: string): void {
+    setEntries((prev: TravelEntry[]) => prev.filter((e: TravelEntry) => e.id !== id));
   }
 
-  function triggerImport() {
+  function triggerImport(): void {
     fileInputRef.current?.click();
   }
 
