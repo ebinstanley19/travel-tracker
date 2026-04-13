@@ -507,9 +507,41 @@ export default function TravelHistoryTrackerApp() {
             type="file"
             accept=".xlsx,.xls,.csv"
             className="hidden"
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const file = e.target.files?.[0];
-              if (file) parseWorkbook(file, setEntries);
+              if (!file) return;
+
+              parseWorkbook(file, async (parsed: TravelEntry[]) => {
+                const payload = parsed.map((item: TravelEntry) => ({
+                  date: item.date,
+                  from: item.from,
+                  to: item.to,
+                  country: item.country,
+                  purpose: item.purpose,
+                  notes: item.notes,
+                }));
+
+                const { data, error } = await supabase
+                  .from("travel_records")
+                  .insert(payload)
+                  .select();
+
+                if (!error && data) {
+                  const normalized: TravelEntry[] = data.map((item: any) => ({
+                    id: item.id,
+                    date: item.date ?? "",
+                    from: item.from ?? "",
+                    to: item.to ?? "",
+                    country: item.country ?? "",
+                    purpose: item.purpose ?? "",
+                    notes: item.notes ?? "",
+                  }));
+
+                  setEntries((prev: TravelEntry[]) => sortEntries([...normalized, ...prev]));
+                } else {
+                  console.error("Import failed:", error);
+                }
+              });
             }}
           />
         </div>
