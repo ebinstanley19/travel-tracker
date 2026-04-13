@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -290,6 +291,31 @@ export default function TravelHistoryTrackerApp() {
     notes: "",
   });
 
+  useEffect(() => {
+    async function loadRecords() {
+      const { data, error } = await supabase
+        .from("travel_records")
+        .select("*")
+        .order("date", { ascending: false });
+
+      if (!error && data) {
+        const normalized: TravelEntry[] = data.map((item: any) => ({
+          id: item.id,
+          date: item.date ?? "",
+          from: item.from ?? "",
+          to: item.to ?? "",
+          country: item.country ?? "",
+          purpose: item.purpose ?? "",
+          notes: item.notes ?? "",
+        }));
+
+        setEntries(normalized);
+      }
+    }
+
+    loadRecords();
+  }, []);
+
   const countries = useMemo(() => {
     return [...new Set(entries.map((e) => e.country).filter(Boolean))].sort();
   }, [entries]);
@@ -368,19 +394,84 @@ export default function TravelHistoryTrackerApp() {
     setOpen(true);
   }
 
-  function saveEntry() {
+  async function saveEntry(): Promise<void> {
     if (!form.date && !form.from && !form.to && !form.country) return;
 
     if (editingId) {
-      setEntries((prev) => prev.map((e) => (e.id === editingId ? { ...e, ...form } : e)));
+      const { data, error } = await supabase
+        .from("travel_records")
+        .update({
+          date: form.date,
+          from: form.from || "",
+          to: form.to || "",
+          country: form.country || "",
+          purpose: form.purpose || "",
+          notes: form.notes || "",
+        })
+        .eq("id", editingId)
+        .select()
+        .single();
+
+      if (!error && data) {
+        const updated: TravelEntry = {
+          id: data.id,
+          date: data.date ?? "",
+          from: data.from ?? "",
+          to: data.to ?? "",
+          country: data.country ?? "",
+          purpose: data.purpose ?? "",
+          notes: data.notes ?? "",
+        };
+
+        setEntries((prev: TravelEntry[]) =>
+          prev.map((e: TravelEntry) => (e.id === editingId ? updated : e))
+        );
+      }
     } else {
-      setEntries((prev) => sortEntries([{ id: crypto.randomUUID(), ...form }, ...prev]));
+      const { data, error } = await supabase
+        .from("travel_records")
+        .insert([
+          {
+            date: form.date,
+            from: form.from || "",
+            to: form.to || "",
+            country: form.country || "",
+            purpose: form.purpose || "",
+            notes: form.notes || "",
+          },
+        ])
+        .select()
+        .single();
+
+      if (!error && data) {
+        const created: TravelEntry = {
+          id: data.id,
+          date: data.date ?? "",
+          from: data.from ?? "",
+          to: data.to ?? "",
+          country: data.country ?? "",
+          purpose: data.purpose ?? "",
+          notes: data.notes ?? "",
+        };
+
+        setEntries((prev: TravelEntry[]) => sortEntries([created, ...prev]));
+      }
     }
+
     setOpen(false);
   }
 
-  function deleteEntry(id: string): void {
-    setEntries((prev: TravelEntry[]) => prev.filter((e: TravelEntry) => e.id !== id));
+  async function deleteEntry(id: string): Promise<void> {
+    const { error } = await supabase
+      .from("travel_records")
+      .delete()
+      .eq("id", id);
+
+    if (!error) {
+      setEntries((prev: TravelEntry[]) =>
+        prev.filter((e: TravelEntry) => e.id !== id)
+      );
+    }
   }
 
   function triggerImport(): void {
