@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Globe2, Plane, Plus, Upload } from "lucide-react";
+import { Download, Plane, Plus, Upload } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,8 +82,18 @@ export default function TravelHistoryTrackerApp() {
 
     let isMounted = true;
 
+    // Timeout safety: force exit loading after 8 seconds
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.warn("Auth session check timed out, proceeding as logged out");
+        setAuthLoading(false);
+      }
+    }, 8000);
+
     supabase.auth.getUser().then(async ({ data }) => {
       if (!isMounted) return;
+
+      clearTimeout(timeoutId);
 
       const currentUser = data.user ?? null;
       setUser(currentUser);
@@ -95,6 +105,12 @@ export default function TravelHistoryTrackerApp() {
       }
 
       setAuthLoading(false);
+    }).catch((err) => {
+      console.error("Auth session check failed:", err);
+      if (isMounted) {
+        clearTimeout(timeoutId);
+        setAuthLoading(false);
+      }
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -110,6 +126,7 @@ export default function TravelHistoryTrackerApp() {
 
     return () => {
       isMounted = false;
+      clearTimeout(timeoutId);
       authListener.subscription.unsubscribe();
     };
   }, []);
