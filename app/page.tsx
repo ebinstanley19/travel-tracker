@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Globe2, Plane, Plus, Upload } from "lucide-react";
+import { Download, Plane, Plus, Upload } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,23 +81,11 @@ export default function TravelHistoryTrackerApp() {
     }
 
     let isMounted = true;
-
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!isMounted) return;
-
-      const currentUser = data.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        await loadRecords(currentUser.id);
-      } else {
-        setEntries([]);
-      }
-
-      setAuthLoading(false);
-    });
+    let initialEventHandled = false;
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
+
       const sessionUser = session?.user ?? null;
       setUser(sessionUser);
 
@@ -105,6 +93,13 @@ export default function TravelHistoryTrackerApp() {
         await loadRecords(sessionUser.id);
       } else {
         setEntries([]);
+      }
+
+      // Only clear loading on the first event (INITIAL_SESSION).
+      // Subsequent events (SIGNED_IN, SIGNED_OUT etc.) must not re-trigger loading.
+      if (!initialEventHandled) {
+        initialEventHandled = true;
+        setAuthLoading(false);
       }
     });
 
