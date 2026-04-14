@@ -83,8 +83,20 @@ export default function TravelHistoryTrackerApp() {
     let isMounted = true;
     let initialEventHandled = false;
 
-    // onAuthStateChange fires INITIAL_SESSION immediately from local storage
-    // without a network round-trip — resolves the loading screen instantly on refresh.
+    // Safety valve: if INITIAL_SESSION hasn't fired within 5 seconds
+    // (e.g. expired token refresh hanging due to network), force login screen.
+    const authTimeout = setTimeout(() => {
+      if (isMounted && !initialEventHandled) {
+        initialEventHandled = true;
+        setUser(null);
+        setEntries([]);
+        setAuthLoading(false);
+      }
+    }, 5000);
+
+    // onAuthStateChange fires INITIAL_SESSION from local storage.
+    // For a valid non-expired session this is instant (no network needed).
+    // For an expired session it attempts a token refresh — may hang on bad networks.
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
 
@@ -97,15 +109,16 @@ export default function TravelHistoryTrackerApp() {
         setEntries([]);
       }
 
-      // First event (INITIAL_SESSION) ends the loading screen.
       if (!initialEventHandled) {
         initialEventHandled = true;
+        clearTimeout(authTimeout);
         setAuthLoading(false);
       }
     });
 
     return () => {
       isMounted = false;
+      clearTimeout(authTimeout);
       authListener.subscription.unsubscribe();
     };
   }, []);
