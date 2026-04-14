@@ -81,28 +81,13 @@ export default function TravelHistoryTrackerApp() {
     }
 
     let isMounted = true;
+    let initialEventHandled = false;
 
-    supabase.auth.getUser().then(async ({ data }) => {
+    // onAuthStateChange fires INITIAL_SESSION immediately from local storage
+    // without a network round-trip — resolves the loading screen instantly on refresh.
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
 
-      const currentUser = data.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        await loadRecords(currentUser.id);
-      } else {
-        setEntries([]);
-      }
-
-      setAuthLoading(false);
-    }).catch((err) => {
-      console.error("Auth session check failed:", err);
-      if (isMounted) {
-        setAuthLoading(false);
-      }
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const sessionUser = session?.user ?? null;
       setUser(sessionUser);
 
@@ -110,6 +95,12 @@ export default function TravelHistoryTrackerApp() {
         await loadRecords(sessionUser.id);
       } else {
         setEntries([]);
+      }
+
+      // First event (INITIAL_SESSION) ends the loading screen.
+      if (!initialEventHandled) {
+        initialEventHandled = true;
+        setAuthLoading(false);
       }
     });
 
