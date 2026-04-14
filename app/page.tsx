@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Plane, Plus, Upload } from "lucide-react";
+import { Download, Globe2, Plane, Plus, Upload } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,25 +81,23 @@ export default function TravelHistoryTrackerApp() {
     }
 
     let isMounted = true;
-    let initialEventHandled = false;
 
-    // Safety valve: if INITIAL_SESSION hasn't fired within 5 seconds
-    // (e.g. expired token refresh hanging due to network), force login screen.
-    const authTimeout = setTimeout(() => {
-      if (isMounted && !initialEventHandled) {
-        initialEventHandled = true;
-        setUser(null);
-        setEntries([]);
-        setAuthLoading(false);
-      }
-    }, 5000);
-
-    // onAuthStateChange fires INITIAL_SESSION from local storage.
-    // For a valid non-expired session this is instant (no network needed).
-    // For an expired session it attempts a token refresh — may hang on bad networks.
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!isMounted) return;
 
+      const currentUser = data.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        await loadRecords(currentUser.id);
+      } else {
+        setEntries([]);
+      }
+
+      setAuthLoading(false);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const sessionUser = session?.user ?? null;
       setUser(sessionUser);
 
@@ -108,17 +106,10 @@ export default function TravelHistoryTrackerApp() {
       } else {
         setEntries([]);
       }
-
-      if (!initialEventHandled) {
-        initialEventHandled = true;
-        clearTimeout(authTimeout);
-        setAuthLoading(false);
-      }
     });
 
     return () => {
       isMounted = false;
-      clearTimeout(authTimeout);
       authListener.subscription.unsubscribe();
     };
   }, []);
