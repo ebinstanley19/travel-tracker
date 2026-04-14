@@ -82,18 +82,8 @@ export default function TravelHistoryTrackerApp() {
 
     let isMounted = true;
 
-    // Timeout safety: force exit loading after 8 seconds
-    const timeoutId = setTimeout(() => {
-      if (isMounted) {
-        console.warn("Auth session check timed out, proceeding as logged out");
-        setAuthLoading(false);
-      }
-    }, 8000);
-
     supabase.auth.getUser().then(async ({ data }) => {
       if (!isMounted) return;
-
-      clearTimeout(timeoutId);
 
       const currentUser = data.user ?? null;
       setUser(currentUser);
@@ -108,7 +98,6 @@ export default function TravelHistoryTrackerApp() {
     }).catch((err) => {
       console.error("Auth session check failed:", err);
       if (isMounted) {
-        clearTimeout(timeoutId);
         setAuthLoading(false);
       }
     });
@@ -126,7 +115,6 @@ export default function TravelHistoryTrackerApp() {
 
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId);
       authListener.subscription.unsubscribe();
     };
   }, []);
