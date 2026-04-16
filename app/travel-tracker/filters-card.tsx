@@ -28,30 +28,25 @@ export function FiltersCard({
   return (
     <Card className="rounded-[2rem] border-white/60 bg-white/75 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       <CardContent className="p-5 md:p-6">
-        <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Command center</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">Slice the timeline fast</h2>
-          </div>
-          <p className="max-w-md text-sm leading-6 text-slate-600">
-            Filter routes by year, destination, and notes to turn a long travel ledger into a sharp personal dashboard.
-          </p>
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-slate-950 md:text-xl">Filters</h2>
+          <p className="text-xs font-medium text-slate-500 md:text-sm">Find trips in seconds</p>
         </div>
         <div className="grid gap-3 md:grid-cols-4">
           <div className="md:col-span-2">
-            <Label className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Search</Label>
+            <Label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Search</Label>
             <div className="relative mt-2">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Search by country, city, route, notes..."
+                placeholder="Country, city, route, or notes"
                 className="h-12 rounded-2xl border-slate-200/80 bg-white/80 pl-9 shadow-none"
               />
             </div>
           </div>
           <div>
-            <Label className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Country</Label>
+            <Label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Country</Label>
             <Select value={countryFilter} onValueChange={onCountryChange}>
               <SelectTrigger className="mt-2 h-12 rounded-2xl border-slate-200/80 bg-white/80 shadow-none"><SelectValue placeholder="All countries" /></SelectTrigger>
               <SelectContent>
@@ -63,7 +58,7 @@ export function FiltersCard({
             </Select>
           </div>
           <div>
-            <Label className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Year</Label>
+            <Label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Year</Label>
             <Select value={yearFilter} onValueChange={onYearChange}>
               <SelectTrigger className="mt-2 h-12 rounded-2xl border-slate-200/80 bg-white/80 shadow-none"><SelectValue placeholder="All years" /></SelectTrigger>
               <SelectContent>

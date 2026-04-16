@@ -11,8 +11,9 @@ export interface TravelEntry {
 export interface TravelForm {
   date: string;
   from: string;
+  fromCountry: string;
   to: string;
-  country: string;
+  toCountry: string;
   purpose: string;
   notes: string;
 }

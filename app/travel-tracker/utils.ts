@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { normalizeCountryName } from "@/app/travel-tracker/countries";
 import type { ParsedDateResult, TravelEntry } from "@/app/travel-tracker/types";
 
 export const monthOrder = [
@@ -64,6 +65,71 @@ function makeId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function formatImportedDate(rawDate: unknown): string {
+  if (rawDate instanceof Date && !Number.isNaN(rawDate.getTime())) {
+    return rawDate.toISOString().slice(0, 10);
+  }
+
+  if (typeof rawDate === "number") {
+    const parsed = XLSX.SSF.parse_date_code(rawDate);
+    if (parsed) {
+      return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
+    }
+  }
+
+  const text = safeText(rawDate);
+  if (!text) return "";
+
+  const parsed = new Date(text);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  return text;
+}
+
+function normalizeRouteCountry(value: unknown): string {
+  return normalizeCountryName(safeText(value));
+}
+
+function headerIndex(headers: string[], aliases: string[]): number {
+  return headers.findIndex((header) => aliases.includes(header));
+}
+
+function parseFlatRows(rows: (string | number | Date)[][]): TravelEntry[] {
+  const [headerRow, ...dataRows] = rows;
+  const headers = (headerRow || []).map((cell) => safeText(cell).toLowerCase());
+
+  const dateIndex = headerIndex(headers, ["date"]);
+  const fromIndex = headerIndex(headers, ["from", "departure", "origin"]);
+  const toIndex = headerIndex(headers, ["to", "destination"]);
+  const countryIndex = headerIndex(headers, ["country", "destination country"]);
+  const purposeIndex = headerIndex(headers, ["purpose"]);
+  const notesIndex = headerIndex(headers, ["notes", "note"]);
+
+  if (dateIndex === -1 || fromIndex === -1 || toIndex === -1) {
+    return [];
+  }
+
+  return dataRows
+    .map((row) => {
+      const from = normalizeRouteCountry(row[fromIndex]);
+      const to = normalizeRouteCountry(row[toIndex]);
+      const fallbackCountry = normalizeRouteCountry(row[countryIndex]);
+
+      return {
+        id: makeId(),
+        date: formatImportedDate(row[dateIndex]),
+        from,
+        to,
+        country: fallbackCountry || to || from,
+        purpose: safeText(row[purposeIndex]),
+        notes: safeText(row[notesIndex]),
+      };
+    })
+    .filter((entry) => entry.date || entry.from || entry.to || entry.notes || entry.purpose);
+}
+
 export function parseWorkbook(file: File, onLoad: (entries: TravelEntry[]) => void): void {
   const monthMap: Record<string, number> = {
     january: 1,
@@ -89,7 +155,7 @@ export function parseWorkbook(file: File, onLoad: (entries: TravelEntry[]) => vo
   }
 
   function normalizePlace(value: unknown): string {
-    return safeText(value);
+    return normalizeRouteCountry(value);
   }
 
   function parseDateCell(rawDate: unknown, currentMonthNumber: number): ParsedDateResult | null {
@@ -145,14 +211,25 @@ export function parseWorkbook(file: File, onLoad: (entries: TravelEntry[]) => vo
     const parsedEntries: TravelEntry[] = [];
 
     workbook.SheetNames.forEach((sheetName: string) => {
-      const year = Number(sheetName);
-      if (Number.isNaN(year)) return;
-
       const sheet = workbook.Sheets[sheetName];
       const rows = XLSX.utils.sheet_to_json<(string | number | Date)[]>(sheet, {
         header: 1,
         defval: "",
       });
+
+      const normalizedSheetName = safeText(sheetName).toLowerCase();
+      const looksLikeFlatSheet = rows.length > 0 && rows[0]?.some((cell) => {
+        const header = safeText(cell).toLowerCase();
+        return ["date", "from", "to", "country", "purpose", "notes"].includes(header);
+      });
+
+      if (normalizedSheetName === "travel records" || looksLikeFlatSheet) {
+        parsedEntries.push(...parseFlatRows(rows));
+        return;
+      }
+
+      const year = Number(sheetName);
+      if (Number.isNaN(year)) return;
 
       let currentMonth = "";
 

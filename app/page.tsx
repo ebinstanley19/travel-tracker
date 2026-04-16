@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Plane, Plus, Upload } from "lucide-react";
+import { ChevronDown, Download, LogOut, Plane, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
+import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthCard, type AuthMode } from "@/app/travel-tracker/auth-card";
 import { EntryDialog } from "@/app/travel-tracker/entry-dialog";
+import { normalizeCountryName } from "@/app/travel-tracker/countries";
 import { FiltersCard } from "@/app/travel-tracker/filters-card";
 import { StatsCards } from "@/app/travel-tracker/stats-cards";
 import { TableView } from "@/app/travel-tracker/table-view";
@@ -17,12 +19,14 @@ import { exportToExcel, formatMonth, formatYear, monthOrder, parseWorkbook, sort
 import { supabase } from "@/lib/supabase";
 
 const sampleData: TravelEntry[] = [];
+const LOCATION_SEPARATOR = " | ";
 
 const emptyForm: TravelForm = {
   date: "",
   from: "",
+  fromCountry: "",
   to: "",
-  country: "",
+  toCountry: "",
   purpose: "",
   notes: "",
 };
@@ -37,15 +41,42 @@ interface TravelRecordRow {
   notes?: string | null;
 }
 
+function normalizeStoredLocation(value: string): string {
+  if (!value) return "";
+
+  const parts = value.split(LOCATION_SEPARATOR);
+  if (parts.length < 2) {
+    return normalizeCountryName(value);
+  }
+
+  const place = parts[0]?.trim() ?? "";
+  const country = normalizeCountryName(parts.slice(1).join(LOCATION_SEPARATOR).trim());
+  return country ? `${place}${LOCATION_SEPARATOR}${country}` : place;
+}
+
 function normalizeRecord(item: TravelRecordRow): TravelEntry {
   return {
     id: item.id,
     date: item.date ?? "",
-    from: item.from ?? "",
-    to: item.to ?? "",
-    country: item.country ?? "",
+    from: normalizeStoredLocation(item.from ?? ""),
+    to: normalizeStoredLocation(item.to ?? ""),
+    country: normalizeCountryName(item.country ?? ""),
     purpose: item.purpose ?? "",
     notes: item.notes ?? "",
+  };
+}
+
+function splitLocation(value: string): { place: string; country: string } {
+  if (!value) return { place: "", country: "" };
+
+  const parts = value.split(LOCATION_SEPARATOR);
+  if (parts.length < 2) {
+    return { place: value, country: "" };
+  }
+
+  return {
+    place: parts[0]?.trim() ?? "",
+    country: parts[1]?.trim() ?? "",
   };
 }
 
@@ -55,6 +86,7 @@ export default function TravelHistoryTrackerApp() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authPending, setAuthPending] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [authFullName, setAuthFullName] = useState("");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState("");
@@ -63,9 +95,23 @@ export default function TravelHistoryTrackerApp() {
   const [countryFilter, setCountryFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
   const [open, setOpen] = useState(false);
+  const [deletingSelected, setDeletingSelected] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const settingsMenuRef = useRef<HTMLDivElement | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [form, setForm] = useState<TravelForm>(emptyForm);
+
+  useEffect(() => {
+    function onPointerDown(event: MouseEvent) {
+      if (!settingsMenuRef.current?.contains(event.target as Node)) {
+        setSettingsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, []);
 
   useEffect(() => {
     async function loadRecords(userId: string) {
@@ -180,7 +226,8 @@ export default function TravelHistoryTrackerApp() {
 
     return orderedYears.map((year) => ({
       year,
-      months: monthOrder
+      months: [...monthOrder]
+        .reverse()
         .filter((month) => grouped[year][month])
         .map((month) => ({ month, items: sortEntries(grouped[year][month]) })),
     }));
@@ -210,12 +257,22 @@ export default function TravelHistoryTrackerApp() {
       return;
     }
 
+    if (authMode === "signup" && !authFullName.trim()) {
+      setAuthError("Full name is required for account creation.");
+      return;
+    }
+
     setAuthPending(true);
 
     if (authMode === "signup") {
       const { error } = await supabase.auth.signUp({
         email: authEmail,
         password: authPassword,
+        options: {
+          data: {
+            full_name: authFullName.trim(),
+          },
+        },
       });
 
       if (error) {
@@ -234,6 +291,30 @@ export default function TravelHistoryTrackerApp() {
       if (error) {
         setAuthError(error.message);
       }
+    }
+
+    setAuthPending(false);
+  }
+
+  async function handleForgotPassword(): Promise<void> {
+    setAuthError("");
+    setAuthInfo("");
+
+    if (!authEmail) {
+      setAuthError("Enter your email first, then click Forgot password.");
+      return;
+    }
+
+    setAuthPending(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(authEmail, {
+      redirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
+    });
+
+    if (error) {
+      setAuthError(error.message);
+    } else {
+      setAuthInfo("Password reset email sent. Check your inbox and spam folder.");
     }
 
     setAuthPending(false);
@@ -265,12 +346,16 @@ export default function TravelHistoryTrackerApp() {
   }
 
   function openEditModal(entry: TravelEntry): void {
+    const fromLocation = splitLocation(entry.from || "");
+    const toLocation = splitLocation(entry.to || "");
+
     setEditingId(entry.id);
     setForm({
       date: entry.date || "",
-      from: entry.from || "",
-      to: entry.to || "",
-      country: entry.country || "",
+      from: fromLocation.country ? fromLocation.place : "",
+      fromCountry: fromLocation.country || fromLocation.place || "",
+      to: toLocation.country ? toLocation.place : "",
+      toCountry: toLocation.country || toLocation.place || entry.country || "",
       purpose: entry.purpose || "",
       notes: entry.notes || "",
     });
@@ -279,16 +364,20 @@ export default function TravelHistoryTrackerApp() {
 
   async function saveEntry(): Promise<void> {
     if (!user) return;
-    if (!form.date && !form.from && !form.to && !form.country) return;
+    if (!form.date && !form.fromCountry && !form.toCountry) return;
+
+    const fromLocation = form.fromCountry.trim();
+    const toLocation = form.toCountry.trim();
+    const destinationCountry = form.toCountry || form.fromCountry || "";
 
     if (editingId) {
       const { data, error } = await supabase
         .from("travel_records")
         .update({
           date: form.date,
-          from: form.from || "",
-          to: form.to || "",
-          country: form.country || "",
+          from: fromLocation,
+          to: toLocation,
+          country: destinationCountry,
           purpose: form.purpose || "",
           notes: form.notes || "",
         })
@@ -307,9 +396,9 @@ export default function TravelHistoryTrackerApp() {
         .insert([
           {
             date: form.date,
-            from: form.from || "",
-            to: form.to || "",
-            country: form.country || "",
+            from: fromLocation,
+            to: toLocation,
+            country: destinationCountry,
             purpose: form.purpose || "",
             notes: form.notes || "",
             user_id: user.id,
@@ -340,6 +429,23 @@ export default function TravelHistoryTrackerApp() {
     }
   }
 
+  async function deleteSelectedEntries(ids: string[]): Promise<void> {
+    if (!user || ids.length === 0) return;
+
+    setDeletingSelected(true);
+    const { error } = await supabase
+      .from("travel_records")
+      .delete()
+      .in("id", ids)
+      .eq("user_id", user.id);
+
+    if (!error) {
+      setEntries((prev) => prev.filter((entry) => !ids.includes(entry.id)));
+    }
+
+    setDeletingSelected(false);
+  }
+
   function triggerImport(): void {
     fileInputRef.current?.click();
   }
@@ -360,28 +466,42 @@ export default function TravelHistoryTrackerApp() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4 md:p-8">
-        <div className="mx-auto max-w-4xl space-y-6">
-          <Card className="rounded-2xl shadow-sm">
-            <CardContent className="p-6">
-              <h1 className="text-2xl font-bold tracking-tight">Travel History Tracker</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Create an account or log in to manage your own private travel history.
-              </p>
+      <div className="relative min-h-screen overflow-hidden bg-slate-50 p-4 md:p-8">
+        <div className="pointer-events-none absolute -left-24 -top-16 h-72 w-72 rounded-full bg-amber-200/45 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 top-12 h-80 w-80 rounded-full bg-sky-200/40 blur-3xl" />
+        <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <Card className="rounded-[2rem] border-0 bg-[linear-gradient(145deg,#0b1324,#142748_65%,#2859a0)] p-0 text-white shadow-[0_24px_90px_rgba(12,26,52,0.3)]">
+            <CardContent className="space-y-6 p-8 md:p-10">
+              <div className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/85">
+                Private travel archive
+              </div>
+              <div>
+                <h1 className="text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-5xl">
+                  Own your travel history in one beautiful timeline.
+                </h1>
+                <p className="mt-4 max-w-xl text-sm leading-7 text-white/78 md:text-base">
+                  Add trips and search your travel history instantly.
+                </p>
+              </div>
             </CardContent>
           </Card>
-          <AuthCard
-            mode={authMode}
-            email={authEmail}
-            password={authPassword}
-            pending={authPending}
-            errorMessage={authError}
-            infoMessage={authInfo}
-            onModeChange={setAuthMode}
-            onEmailChange={setAuthEmail}
-            onPasswordChange={setAuthPassword}
-            onSubmit={handleAuthSubmit}
-          />
+          <div className="flex items-center justify-center">
+            <AuthCard
+              mode={authMode}
+              fullName={authFullName}
+              email={authEmail}
+              password={authPassword}
+              pending={authPending}
+              errorMessage={authError}
+              infoMessage={authInfo}
+              onModeChange={setAuthMode}
+              onFullNameChange={setAuthFullName}
+              onEmailChange={setAuthEmail}
+              onPasswordChange={setAuthPassword}
+              onForgotPassword={handleForgotPassword}
+              onSubmit={handleAuthSubmit}
+            />
+          </div>
         </div>
       </div>
     );
@@ -401,8 +521,8 @@ export default function TravelHistoryTrackerApp() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" onClick={handleSignOut} disabled={authPending}>
-              {authPending ? "Logging out..." : "Log out"}
+            <Button onClick={openNewModal}>
+              <Plus className="mr-2 h-4 w-4" /> Add entry
             </Button>
             <Button variant="outline" onClick={() => exportToExcel(entries)}>
               <Download className="mr-2 h-4 w-4" /> Export Excel
@@ -410,9 +530,36 @@ export default function TravelHistoryTrackerApp() {
             <Button variant="outline" onClick={triggerImport}>
               <Upload className="mr-2 h-4 w-4" /> Import Excel
             </Button>
-            <Button onClick={openNewModal}>
-              <Plus className="mr-2 h-4 w-4" /> Add entry
-            </Button>
+            <div className="relative" ref={settingsMenuRef}>
+              <Button variant="outline" onClick={() => setSettingsOpen((prev) => !prev)}>
+                <Settings className="mr-2 h-4 w-4" /> Settings <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+              {settingsOpen ? (
+                <div className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="h-11 w-full justify-start rounded-none px-3"
+                    onClick={() => setSettingsOpen(false)}
+                  >
+                    <Link href="/profile">
+                      <UserCircle2 className="mr-2 h-4 w-4" /> Profile
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="h-11 w-full justify-start rounded-none px-3 text-red-600 hover:text-red-700"
+                    onClick={() => {
+                      setSettingsOpen(false);
+                      void handleSignOut();
+                    }}
+                    disabled={authPending}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" /> {authPending ? "Logging out..." : "Log out"}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
           </div>
           <input
             ref={fileInputRef}
@@ -487,7 +634,7 @@ export default function TravelHistoryTrackerApp() {
           </TabsContent>
 
           <TabsContent value="table">
-            <TableView entries={filtered} />
+            <TableView entries={filtered} onDeleteSelected={deleteSelectedEntries} deletingSelected={deletingSelected} />
           </TabsContent>
         </Tabs>
 
