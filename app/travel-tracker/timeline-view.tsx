@@ -185,7 +185,7 @@ export function TimelineView({
                               Options <ChevronDown className="ml-2 h-4 w-4" />
                             </Button>
                             {activeOptionsId === entry.id ? (
-                              <div className="absolute right-0 z-20 mt-2 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                              <div className="absolute right-0 bottom-full z-30 mb-2 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:bottom-auto sm:top-full sm:mb-0 sm:mt-2">
                                 <Button
                                   variant="ghost"
                                   size="sm"
