@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, Download, LogOut, Palette, Plane, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
+import { ChevronDown, Download, LogOut, Palette, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,9 @@ import { MapView } from "@/app/travel-tracker/map-view";
 import { StatsCards } from "@/app/travel-tracker/stats-cards";
 import { TableView } from "@/app/travel-tracker/table-view";
 import { TimelineView } from "@/app/travel-tracker/timeline-view";
+import { LOGO_VARIANT } from "@/app/travel-tracker/brand-config";
 import type { TravelEntry, TravelForm, YearMonthGroup } from "@/app/travel-tracker/types";
-import { exportToExcel, formatMonth, formatYear, monthOrder, parseWorkbook, sortEntries } from "@/app/travel-tracker/utils";
+import { downloadImportTemplate, exportToExcel, formatMonth, formatYear, monthOrder, parseWorkbook, sortEntries } from "@/app/travel-tracker/utils";
 import { supabase } from "@/lib/supabase";
 
 const sampleData: TravelEntry[] = [];
@@ -129,6 +130,7 @@ export default function TravelHistoryTrackerApp() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [themePreset, setThemePreset] = useState<ThemePreset>("sand");
   const [form, setForm] = useState<TravelForm>(emptyForm);
+  const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
 
   useEffect(() => {
     const storedTheme = typeof window !== "undefined" ? localStorage.getItem("routebook-theme") : null;
@@ -609,7 +611,7 @@ export default function TravelHistoryTrackerApp() {
         <div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Plane className="h-4 w-4" /> Route Book
+              <img src={logoSrc} alt="Route Book logo" className="h-4 w-4 rounded-sm" /> Route Book
             </div>
             <h1 className="mt-2 text-3xl font-bold tracking-tight">Track every trip in one clean view</h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
@@ -642,6 +644,16 @@ export default function TravelHistoryTrackerApp() {
                       <Button variant={themePreset === "sunset" ? "default" : "outline"} size="sm" className="h-8" onClick={() => applyTheme("sunset")}>Sunset</Button>
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    className="h-11 w-full justify-start rounded-none px-3"
+                    onClick={() => {
+                      setSettingsOpen(false);
+                      downloadImportTemplate();
+                    }}
+                  >
+                    <Download className="mr-2 h-4 w-4" /> Download template
+                  </Button>
                   <Button
                     asChild
                     variant="ghost"

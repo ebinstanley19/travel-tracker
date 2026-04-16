@@ -70,6 +70,45 @@ export function exportToExcel(entries: TravelEntry[]): void {
   XLSX.writeFile(wb, "travel-history.xlsx");
 }
 
+export function downloadImportTemplate(): void {
+  const templateRows = [
+    {
+      "From Date": "2026-03-14",
+      "To Date": "2026-03-16",
+      From: "Singapore",
+      To: "Malaysia",
+      Country: "Malaysia",
+      City: "Kuala Lumpur",
+      Purpose: "Vacation",
+    },
+  ];
+
+  const instructionsRows = [
+    {
+      Note: "Use this template to import trips.",
+    },
+    {
+      Note: "Required columns: From Date, From, To.",
+    },
+    {
+      Note: "Optional columns: To Date, Country, City, Purpose.",
+    },
+    {
+      Note: "Date format: YYYY-MM-DD.",
+    },
+    {
+      Note: "One row = one trip. For same-day trips, keep From Date and To Date the same.",
+    },
+  ];
+
+  const templateSheet = XLSX.utils.json_to_sheet(templateRows);
+  const instructionsSheet = XLSX.utils.json_to_sheet(instructionsRows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, templateSheet, "Import Template");
+  XLSX.utils.book_append_sheet(workbook, instructionsSheet, "Instructions");
+  XLSX.writeFile(workbook, "route-book-import-template.xlsx");
+}
+
 function makeId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -118,8 +157,8 @@ function parseFlatRows(rows: (string | number | Date)[][]): TravelEntry[] {
   const fromIndex = headerIndex(headers, ["from", "departure", "origin"]);
   const toIndex = headerIndex(headers, ["to", "destination"]);
   const countryIndex = headerIndex(headers, ["country", "destination country"]);
-  const purposeIndex = headerIndex(headers, ["city", "purpose"]);
-  const notesIndex = headerIndex(headers, ["notes", "note", "purpose", "trip purpose"]);
+  const purposeIndex = headerIndex(headers, ["city", "visited city"]);
+  const notesIndex = headerIndex(headers, ["purpose", "trip purpose", "notes", "note"]);
 
   if (dateIndex === -1 || fromIndex === -1 || toIndex === -1) {
     return [];

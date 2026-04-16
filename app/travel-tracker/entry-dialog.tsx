@@ -40,36 +40,36 @@ export function EntryDialog({
         <DialogHeader>
           <DialogTitle>{editingId ? "Edit travel entry" : "Add travel entry"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-5 py-2">
+        <div className="space-y-4 py-2">
           <div className="grid gap-4 md:grid-cols-2">
-            <div>
+            <div className="space-y-1.5">
               <Label>From date</Label>
               <Input
                 type="date"
                 value={form.date}
                 onChange={(e) => onFormChange({ ...form, date: e.target.value })}
-                className="mt-2 h-11"
+                className="h-11"
               />
             </div>
-            <div>
+            <div className="space-y-1.5">
               <Label>To date</Label>
               <Input
                 type="date"
                 value={form.endDate}
                 onChange={(e) => onFormChange({ ...form, endDate: e.target.value })}
-                className="mt-2 h-11"
+                className="h-11"
               />
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div>
+            <div className="space-y-1.5">
               <Label>From</Label>
               <Select
                 value={form.fromCountry || ""}
                 onValueChange={(value) => onFormChange({ ...form, fromCountry: value })}
               >
-                <SelectTrigger className="mt-2 h-11">
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select departure country" />
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
@@ -81,13 +81,13 @@ export function EntryDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div className="space-y-1.5">
               <Label>To</Label>
               <Select
                 value={form.toCountry || ""}
                 onValueChange={(value) => onFormChange({ ...form, toCountry: value })}
               >
-                <SelectTrigger className="mt-2 h-11">
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select destination country" />
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
@@ -102,25 +102,24 @@ export function EntryDialog({
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div>
+            <div className="space-y-1.5">
               <Label>City (optional)</Label>
               <Input
                 value={form.purpose}
                 onChange={(e) => onFormChange({ ...form, purpose: e.target.value })}
                 placeholder="e.g. Kuala Lumpur"
-                className="mt-2 h-11"
+                className="h-11"
               />
             </div>
-          </div>
-
-          <div>
-            <Label>Purpose</Label>
-            <Input
-              value={form.notes}
-              onChange={(e) => onFormChange({ ...form, notes: e.target.value })}
-              placeholder="e.g. Vacation / Work / Transit"
-              className="mt-2 h-11"
-            />
+            <div className="space-y-1.5">
+              <Label>Purpose</Label>
+              <Input
+                value={form.notes}
+                onChange={(e) => onFormChange({ ...form, notes: e.target.value })}
+                placeholder="e.g. Vacation / Work / Transit"
+                className="h-11"
+              />
+            </div>
           </div>
         </div>
         <Separator />

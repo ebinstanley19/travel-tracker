@@ -15,6 +15,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Route Book",
   description: "A private travel history dashboard with polished timelines, filters, and personal trip records.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon",
+    apple: "/apple-icon",
+  },
+  appleWebApp: {
+    title: "Route Book",
+    capable: true,
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({
