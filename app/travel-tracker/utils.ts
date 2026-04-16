@@ -33,17 +33,30 @@ export function prettyDate(dateStr: string): string {
     : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+export function prettyDateRange(startDate: string, endDate?: string): string {
+  if (!startDate && !endDate) return "";
+  if (!startDate) return prettyDate(endDate ?? "");
+  if (!endDate || endDate === startDate) return prettyDate(startDate);
+  return `${prettyDate(startDate)} -> ${prettyDate(endDate)}`;
+}
+
 export function sortEntries(entries: TravelEntry[]): TravelEntry[] {
+  function toMillis(value: string): number {
+    const parsed = new Date(value).getTime();
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
   return [...entries].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => toMillis(b.date || b.endDate) - toMillis(a.date || a.endDate)
   );
 }
 
 export function exportToExcel(entries: TravelEntry[]): void {
   const rows = sortEntries(entries).map((item) => ({
-    Year: formatYear(item.date),
-    Month: formatMonth(item.date),
+    Year: formatYear(item.date || item.endDate),
+    Month: formatMonth(item.date || item.endDate),
     Date: item.date,
+    "To Date": item.endDate,
     From: item.from,
     To: item.to,
     Country: item.country,
@@ -100,7 +113,8 @@ function parseFlatRows(rows: (string | number | Date)[][]): TravelEntry[] {
   const [headerRow, ...dataRows] = rows;
   const headers = (headerRow || []).map((cell) => safeText(cell).toLowerCase());
 
-  const dateIndex = headerIndex(headers, ["date"]);
+  const dateIndex = headerIndex(headers, ["date", "from date", "start date"]);
+  const endDateIndex = headerIndex(headers, ["to date", "end date", "return date"]);
   const fromIndex = headerIndex(headers, ["from", "departure", "origin"]);
   const toIndex = headerIndex(headers, ["to", "destination"]);
   const countryIndex = headerIndex(headers, ["country", "destination country"]);
@@ -120,6 +134,7 @@ function parseFlatRows(rows: (string | number | Date)[][]): TravelEntry[] {
       return {
         id: makeId(),
         date: formatImportedDate(row[dateIndex]),
+        endDate: endDateIndex === -1 ? "" : formatImportedDate(row[endDateIndex]),
         from,
         to,
         country: fallbackCountry || to || from,
@@ -127,7 +142,7 @@ function parseFlatRows(rows: (string | number | Date)[][]): TravelEntry[] {
         notes: safeText(row[notesIndex]),
       };
     })
-    .filter((entry) => entry.date || entry.from || entry.to || entry.notes || entry.purpose);
+    .filter((entry) => entry.date || entry.endDate || entry.from || entry.to || entry.notes || entry.purpose);
 }
 
 export function parseWorkbook(file: File, onLoad: (entries: TravelEntry[]) => void): void {
@@ -258,6 +273,7 @@ export function parseWorkbook(file: File, onLoad: (entries: TravelEntry[]) => vo
           parsedEntries.push({
             id: makeId(),
             date: makeDate(year, monthNumber, parsedDate.startDay),
+            endDate: "",
             from: fromCell,
             to: toCell,
             country: toCell,
@@ -270,21 +286,12 @@ export function parseWorkbook(file: File, onLoad: (entries: TravelEntry[]) => vo
           parsedEntries.push({
             id: makeId(),
             date: makeDate(year, monthNumber, parsedDate.startDay),
+            endDate: makeDate(year, monthNumber, parsedDate.endDay),
             from: fromCell,
             to: toCell,
             country: toCell,
             purpose: "",
-            notes: "Auto-imported from date range",
-          });
-
-          parsedEntries.push({
-            id: makeId(),
-            date: makeDate(year, monthNumber, parsedDate.endDay),
-            from: toCell,
-            to: fromCell,
-            country: fromCell,
-            purpose: "",
-            notes: "Auto-generated return trip from date range",
+            notes: "Auto-imported date range",
           });
         }
       }

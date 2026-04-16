@@ -38,8 +38,8 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
     const direction = sortDirection === "asc" ? 1 : -1;
 
     return [...entries].sort((a, b) => {
-      const first = new Date(a.date).getTime();
-      const second = new Date(b.date).getTime();
+      const first = new Date(a.date || a.endDate).getTime();
+      const second = new Date(b.date || b.endDate).getTime();
       const safeFirst = Number.isNaN(first) ? 0 : first;
       const safeSecond = Number.isNaN(second) ? 0 : second;
       return (safeFirst - safeSecond) * direction;
@@ -96,14 +96,15 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
           </Button>
         </div>
         <ScrollArea className="w-full">
-          <div className="min-w-[980px]">
-            <div className="grid grid-cols-[40px_repeat(7,minmax(0,1fr))] gap-3 border-b border-slate-200/80 bg-[linear-gradient(135deg,rgba(16,33,58,0.98),rgba(48,89,152,0.92))] px-5 py-4 text-xs font-semibold uppercase tracking-[0.22em] text-white/85">
+          <div className="min-w-[1160px]">
+            <div className="grid grid-cols-[40px_repeat(8,minmax(0,1fr))] gap-3 border-b border-slate-200/80 bg-[linear-gradient(135deg,rgba(16,33,58,0.98),rgba(48,89,152,0.92))] px-5 py-4 text-xs font-semibold uppercase tracking-[0.22em] text-white/85">
               <div />
-              <button type="button" onClick={toggleDateSort} className="flex items-center gap-1 text-left hover:text-white" aria-label={`Sort by Date. ${dateSortLabel()}`}>
-                <span>Date</span>
+              <button type="button" onClick={toggleDateSort} className="flex items-center gap-1 text-left hover:text-white" aria-label={`Sort by From Date. ${dateSortLabel()}`}>
+                <span>From Date</span>
                 <ArrowUpDown className="h-3.5 w-3.5" />
                 <span className="w-3 text-center">{dateSortIcon()}</span>
               </button>
+              <div>To Date</div>
               <div>Year</div>
               <div>Month</div>
               <div>From</div>
@@ -112,7 +113,7 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
               <div>Notes</div>
             </div>
             {sortedEntries.map((entry) => (
-              <div key={entry.id} className="grid grid-cols-[40px_repeat(7,minmax(0,1fr))] gap-3 border-b border-slate-200/70 px-5 py-4 text-sm text-slate-700 transition-colors hover:bg-slate-50/80">
+              <div key={entry.id} className="grid grid-cols-[40px_repeat(8,minmax(0,1fr))] gap-3 border-b border-slate-200/70 px-5 py-4 text-sm text-slate-700 transition-colors hover:bg-slate-50/80">
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -123,8 +124,9 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
                   />
                 </div>
                 <div>{prettyDate(entry.date)}</div>
-                <div>{formatYear(entry.date)}</div>
-                <div>{formatMonth(entry.date)}</div>
+                <div>{entry.endDate ? prettyDate(entry.endDate) : "-"}</div>
+                <div>{formatYear(entry.date || entry.endDate)}</div>
+                <div>{formatMonth(entry.date || entry.endDate)}</div>
                 <div>{displayLocation(entry.from)}</div>
                 <div>{displayLocation(entry.to)}</div>
                 <div>{entry.purpose || "-"}</div>

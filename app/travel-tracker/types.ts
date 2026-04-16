@@ -1,6 +1,7 @@
 export interface TravelEntry {
   id: string;
   date: string;
+  endDate: string;
   from: string;
   to: string;
   country: string;
@@ -10,6 +11,7 @@ export interface TravelEntry {
 
 export interface TravelForm {
   date: string;
+  endDate: string;
   from: string;
   fromCountry: string;
   to: string;

@@ -23,6 +23,7 @@ const LOCATION_SEPARATOR = " | ";
 
 const emptyForm: TravelForm = {
   date: "",
+  endDate: "",
   from: "",
   fromCountry: "",
   to: "",
@@ -34,6 +35,7 @@ const emptyForm: TravelForm = {
 interface TravelRecordRow {
   id: string;
   date?: string | null;
+  end_date?: string | null;
   from?: string | null;
   to?: string | null;
   country?: string | null;
@@ -58,12 +60,35 @@ function normalizeRecord(item: TravelRecordRow): TravelEntry {
   return {
     id: item.id,
     date: item.date ?? "",
+    endDate: item.end_date ?? "",
     from: normalizeStoredLocation(item.from ?? ""),
     to: normalizeStoredLocation(item.to ?? ""),
     country: normalizeCountryName(item.country ?? ""),
     purpose: item.purpose ?? "",
     notes: item.notes ?? "",
   };
+}
+
+function isMissingEndDateColumn(errorMessage: string): boolean {
+  return /end_date/i.test(errorMessage);
+}
+
+function normalizeDateRange(start: string, end: string): { startDate: string; endDate: string } {
+  const startDate = start || end;
+  const endDate = end || start;
+
+  if (!startDate || !endDate) {
+    return { startDate, endDate };
+  }
+
+  const startTime = new Date(startDate).getTime();
+  const endTime = new Date(endDate).getTime();
+
+  if (Number.isNaN(startTime) || Number.isNaN(endTime) || startTime <= endTime) {
+    return { startDate, endDate };
+  }
+
+  return { startDate: endDate, endDate: startDate };
 }
 
 function splitLocation(value: string): { place: string; country: string } {
@@ -193,16 +218,16 @@ export default function TravelHistoryTrackerApp() {
   }, [entries]);
 
   const years = useMemo(() => {
-    return [...new Set(entries.map((entry) => formatYear(entry.date)).filter(Boolean))].sort((a, b) => Number(b) - Number(a));
+    return [...new Set(entries.map((entry) => formatYear(entry.date || entry.endDate)).filter(Boolean))].sort((a, b) => Number(b) - Number(a));
   }, [entries]);
 
   const filtered = useMemo(() => {
     return sortEntries(
       entries.filter((entry) => {
-        const blob = `${entry.date} ${entry.from} ${entry.to} ${entry.country} ${entry.purpose} ${entry.notes}`.toLowerCase();
+        const blob = `${entry.date} ${entry.endDate} ${entry.from} ${entry.to} ${entry.country} ${entry.purpose} ${entry.notes}`.toLowerCase();
         const matchesSearch = blob.includes(search.toLowerCase());
         const matchesCountry = countryFilter === "all" || entry.country === countryFilter;
-        const matchesYear = yearFilter === "all" || formatYear(entry.date) === yearFilter;
+        const matchesYear = yearFilter === "all" || formatYear(entry.date || entry.endDate) === yearFilter;
         return matchesSearch && matchesCountry && matchesYear;
       })
     );
@@ -211,8 +236,9 @@ export default function TravelHistoryTrackerApp() {
   const groupedByYearMonth = useMemo<YearMonthGroup[]>(() => {
     const grouped: Record<string, Record<string, TravelEntry[]>> = {};
     filtered.forEach((entry) => {
-      const year = formatYear(entry.date) || "Unknown Year";
-      const month = formatMonth(entry.date) || "Unknown Month";
+      const anchorDate = entry.date || entry.endDate;
+      const year = formatYear(anchorDate) || "Unknown Year";
+      const month = formatMonth(anchorDate) || "Unknown Month";
       grouped[year] ??= {};
       grouped[year][month] ??= [];
       grouped[year][month].push(entry);
@@ -236,7 +262,7 @@ export default function TravelHistoryTrackerApp() {
   const stats = useMemo(() => {
     const uniqueCountries = new Set(entries.map((entry) => entry.country).filter(Boolean)).size;
     const totalTrips = entries.length;
-    const yearsCovered = new Set(entries.map((entry) => formatYear(entry.date)).filter(Boolean)).size;
+    const yearsCovered = new Set(entries.map((entry) => formatYear(entry.date || entry.endDate)).filter(Boolean)).size;
 
     const countryCounts = entries.reduce<Record<string, number>>((acc, item) => {
       if (!item.country) return acc;
@@ -244,8 +270,10 @@ export default function TravelHistoryTrackerApp() {
       return acc;
     }, {});
 
-    const topCountry = Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
-    return { uniqueCountries, totalTrips, yearsCovered, topCountry };
+    const topCountryEntry = Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0];
+    const topCountry = topCountryEntry?.[0] || "-";
+    const topCountryVisits = topCountryEntry?.[1] || 0;
+    return { uniqueCountries, totalTrips, yearsCovered, topCountry, topCountryVisits };
   }, [entries]);
 
   async function handleAuthSubmit(): Promise<void> {
@@ -352,6 +380,7 @@ export default function TravelHistoryTrackerApp() {
     setEditingId(entry.id);
     setForm({
       date: entry.date || "",
+      endDate: entry.endDate || entry.date || "",
       from: fromLocation.country ? fromLocation.place : "",
       fromCountry: fromLocation.country || fromLocation.place || "",
       to: toLocation.country ? toLocation.place : "",
@@ -364,17 +393,20 @@ export default function TravelHistoryTrackerApp() {
 
   async function saveEntry(): Promise<void> {
     if (!user) return;
-    if (!form.date && !form.fromCountry && !form.toCountry) return;
+    if (!form.date && !form.endDate && !form.fromCountry && !form.toCountry) return;
+
+    const { startDate, endDate } = normalizeDateRange(form.date, form.endDate);
 
     const fromLocation = form.fromCountry.trim();
     const toLocation = form.toCountry.trim();
     const destinationCountry = form.toCountry || form.fromCountry || "";
 
     if (editingId) {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("travel_records")
         .update({
-          date: form.date,
+          date: startDate,
+          end_date: endDate || null,
           from: fromLocation,
           to: toLocation,
           country: destinationCountry,
@@ -386,16 +418,38 @@ export default function TravelHistoryTrackerApp() {
         .select()
         .single();
 
+      if (error?.message && isMissingEndDateColumn(error.message)) {
+        console.warn("travel_records.end_date column not found; falling back to single date storage.");
+        const retry = await supabase
+          .from("travel_records")
+          .update({
+            date: startDate,
+            from: fromLocation,
+            to: toLocation,
+            country: destinationCountry,
+            purpose: form.purpose || "",
+            notes: form.notes || "",
+          })
+          .eq("id", editingId)
+          .eq("user_id", user.id)
+          .select()
+          .single();
+
+        data = retry.data;
+        error = retry.error;
+      }
+
       if (!error && data) {
         const updated = normalizeRecord(data as TravelRecordRow);
         setEntries((prev) => prev.map((entry) => (entry.id === editingId ? updated : entry)));
       }
     } else {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("travel_records")
         .insert([
           {
-            date: form.date,
+            date: startDate,
+            end_date: endDate || null,
             from: fromLocation,
             to: toLocation,
             country: destinationCountry,
@@ -406,6 +460,28 @@ export default function TravelHistoryTrackerApp() {
         ])
         .select()
         .single();
+
+      if (error?.message && isMissingEndDateColumn(error.message)) {
+        console.warn("travel_records.end_date column not found; falling back to single date storage.");
+        const retry = await supabase
+          .from("travel_records")
+          .insert([
+            {
+              date: startDate,
+              from: fromLocation,
+              to: toLocation,
+              country: destinationCountry,
+              purpose: form.purpose || "",
+              notes: form.notes || "",
+              user_id: user.id,
+            },
+          ])
+          .select()
+          .single();
+
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (!error && data) {
         const created = normalizeRecord(data as TravelRecordRow);
@@ -574,6 +650,7 @@ export default function TravelHistoryTrackerApp() {
               parseWorkbook(file, async (parsed: TravelEntry[]) => {
                 const payload = parsed.map((item) => ({
                   date: item.date,
+                  end_date: item.endDate || null,
                   from: item.from,
                   to: item.to,
                   country: item.country,
@@ -582,10 +659,31 @@ export default function TravelHistoryTrackerApp() {
                   user_id: user.id,
                 }));
 
-                const { data, error } = await supabase
+                let { data, error } = await supabase
                   .from("travel_records")
                   .insert(payload)
                   .select();
+
+                if (error?.message && isMissingEndDateColumn(error.message)) {
+                  console.warn("travel_records.end_date column not found; falling back to single date storage for imports.");
+                  const fallbackPayload = parsed.map((item) => ({
+                    date: item.date,
+                    from: item.from,
+                    to: item.to,
+                    country: item.country,
+                    purpose: item.purpose,
+                    notes: item.notes,
+                    user_id: user.id,
+                  }));
+
+                  const retry = await supabase
+                    .from("travel_records")
+                    .insert(fallbackPayload)
+                    .select();
+
+                  data = retry.data;
+                  error = retry.error;
+                }
 
                 if (!error && data) {
                   const normalized = (data as TravelRecordRow[]).map(normalizeRecord);
@@ -603,6 +701,7 @@ export default function TravelHistoryTrackerApp() {
           uniqueCountries={stats.uniqueCountries}
           yearsCovered={stats.yearsCovered}
           topCountry={stats.topCountry}
+          topCountryVisits={stats.topCountryVisits}
         />
 
         <FiltersCard

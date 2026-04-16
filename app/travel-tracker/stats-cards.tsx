@@ -5,9 +5,10 @@ interface StatsCardsProps {
   uniqueCountries: number;
   yearsCovered: number;
   topCountry: string;
+  topCountryVisits: number;
 }
 
-export function StatsCards({ totalTrips, uniqueCountries, yearsCovered, topCountry }: StatsCardsProps) {
+export function StatsCards({ totalTrips, uniqueCountries, yearsCovered, topCountry, topCountryVisits }: StatsCardsProps) {
   const items = [
     {
       label: "Total movements",
@@ -31,7 +32,9 @@ export function StatsCards({ totalTrips, uniqueCountries, yearsCovered, topCount
       label: "Top country",
       value: topCountry,
       tone: "from-[#f5e8d8] via-[#f1ddd0] to-[#e7d3ea] text-slate-950",
-      meta: "Your most revisited stop so far",
+      meta: topCountry === "-"
+        ? "No trips yet"
+        : `Visited ${topCountryVisits} time${topCountryVisits === 1 ? "" : "s"}`,
     },
   ];
 

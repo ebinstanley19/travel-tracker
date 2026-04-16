@@ -43,7 +43,7 @@ export function EntryDialog({
         <div className="space-y-5 py-2">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label>Date</Label>
+              <Label>From date</Label>
               <Input
                 type="date"
                 value={form.date}
@@ -51,6 +51,18 @@ export function EntryDialog({
                 className="mt-2 h-11"
               />
             </div>
+            <div>
+              <Label>To date</Label>
+              <Input
+                type="date"
+                value={form.endDate}
+                onChange={(e) => onFormChange({ ...form, endDate: e.target.value })}
+                className="mt-2 h-11"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
             <div>
               <Label>Purpose</Label>
               <Input
