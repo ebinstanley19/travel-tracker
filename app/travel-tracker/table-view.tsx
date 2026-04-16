@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import type { TravelEntry } from "@/app/travel-tracker/types";
 import { formatMonth, formatYear, prettyDate } from "@/app/travel-tracker/utils";
 
@@ -95,7 +94,7 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
             {deletingSelected ? "Deleting..." : `Delete selected (${visibleSelectedIds.length})`}
           </Button>
         </div>
-        <ScrollArea className="w-full">
+        <div className="w-full overflow-x-auto overscroll-x-contain [scrollbar-width:thin] [-webkit-overflow-scrolling:touch]">
           <div className="min-w-[1160px]">
             <div className="grid grid-cols-[40px_repeat(8,minmax(0,1fr))] gap-3 border-b border-slate-200/80 bg-[linear-gradient(135deg,rgba(16,33,58,0.98),rgba(48,89,152,0.92))] px-5 py-4 text-xs font-semibold uppercase tracking-[0.22em] text-white/85">
               <div />
@@ -134,7 +133,7 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
               </div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
