@@ -81,7 +81,43 @@ export default function TravelHistoryTrackerApp() {
     }
 
     let isMounted = true;
-    let initialEventHandled = false;
+
+    async function bootstrapAuth() {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (!isMounted) return;
+
+        if (error) {
+          console.error("Auth bootstrap failed:", error.message);
+          setUser(null);
+          setEntries([]);
+          return;
+        }
+
+        const sessionUser = session?.user ?? null;
+        setUser(sessionUser);
+
+        if (sessionUser) {
+          await loadRecords(sessionUser.id);
+        } else {
+          setEntries([]);
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error("Unexpected auth bootstrap error:", error);
+          setUser(null);
+          setEntries([]);
+        }
+      } finally {
+        if (isMounted) {
+          setAuthLoading(false);
+        }
+      }
+    }
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!isMounted) return;
@@ -95,13 +131,10 @@ export default function TravelHistoryTrackerApp() {
         setEntries([]);
       }
 
-      // Only clear loading on the first event (INITIAL_SESSION).
-      // Subsequent events (SIGNED_IN, SIGNED_OUT etc.) must not re-trigger loading.
-      if (!initialEventHandled) {
-        initialEventHandled = true;
-        setAuthLoading(false);
-      }
+      setAuthLoading(false);
     });
+
+    void bootstrapAuth();
 
     return () => {
       isMounted = false;
