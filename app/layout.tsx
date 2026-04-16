@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Travel Tracker",
+  title: "Route Book",
   description: "A private travel history dashboard with polished timelines, filters, and personal trip records.",
 };
 

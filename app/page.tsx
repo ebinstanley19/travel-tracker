@@ -513,7 +513,7 @@ export default function TravelHistoryTrackerApp() {
         <div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Plane className="h-4 w-4" /> Travel History Tracker
+              <Plane className="h-4 w-4" /> Route Book
             </div>
             <h1 className="mt-2 text-3xl font-bold tracking-tight">Track every trip in one clean view</h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
