@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, Download, LogOut, Plane, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
+import { ChevronDown, Download, LogOut, Palette, Plane, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { AuthCard, type AuthMode } from "@/app/travel-tracker/auth-card";
 import { EntryDialog } from "@/app/travel-tracker/entry-dialog";
 import { normalizeCountryName } from "@/app/travel-tracker/countries";
 import { FiltersCard } from "@/app/travel-tracker/filters-card";
+import { MapView } from "@/app/travel-tracker/map-view";
 import { StatsCards } from "@/app/travel-tracker/stats-cards";
 import { TableView } from "@/app/travel-tracker/table-view";
 import { TimelineView } from "@/app/travel-tracker/timeline-view";
@@ -20,6 +21,7 @@ import { supabase } from "@/lib/supabase";
 
 const sampleData: TravelEntry[] = [];
 const LOCATION_SEPARATOR = " | ";
+type ThemePreset = "sand" | "ocean" | "sunset";
 
 const emptyForm: TravelForm = {
   date: "",
@@ -125,7 +127,19 @@ export default function TravelHistoryTrackerApp() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [themePreset, setThemePreset] = useState<ThemePreset>("sand");
   const [form, setForm] = useState<TravelForm>(emptyForm);
+
+  useEffect(() => {
+    const storedTheme = typeof window !== "undefined" ? localStorage.getItem("routebook-theme") : null;
+    if (storedTheme === "sand" || storedTheme === "ocean" || storedTheme === "sunset") {
+      setThemePreset(storedTheme);
+      document.documentElement.setAttribute("data-theme", storedTheme);
+      return;
+    }
+
+    document.documentElement.setAttribute("data-theme", "sand");
+  }, []);
 
   useEffect(() => {
     function onPointerDown(event: MouseEvent) {
@@ -137,6 +151,12 @@ export default function TravelHistoryTrackerApp() {
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
+
+  function applyTheme(nextTheme: ThemePreset): void {
+    setThemePreset(nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    localStorage.setItem("routebook-theme", nextTheme);
+  }
 
   useEffect(() => {
     async function loadRecords(userId: string) {
@@ -584,7 +604,7 @@ export default function TravelHistoryTrackerApp() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+    <div className="min-h-screen bg-slate-50 p-4 pb-24 md:p-8 md:pb-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
@@ -611,7 +631,17 @@ export default function TravelHistoryTrackerApp() {
                 <Settings className="mr-2 h-4 w-4" /> Settings <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
               {settingsOpen ? (
-                <div className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                <div className="absolute right-0 z-30 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                  <div className="border-b border-slate-100 px-3 py-2">
+                    <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      <Palette className="h-3.5 w-3.5" /> Theme
+                    </p>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      <Button variant={themePreset === "sand" ? "default" : "outline"} size="sm" className="h-8" onClick={() => applyTheme("sand")}>Sand</Button>
+                      <Button variant={themePreset === "ocean" ? "default" : "outline"} size="sm" className="h-8" onClick={() => applyTheme("ocean")}>Ocean</Button>
+                      <Button variant={themePreset === "sunset" ? "default" : "outline"} size="sm" className="h-8" onClick={() => applyTheme("sunset")}>Sunset</Button>
+                    </div>
+                  </div>
                   <Button
                     asChild
                     variant="ghost"
@@ -716,9 +746,10 @@ export default function TravelHistoryTrackerApp() {
         />
 
         <Tabs defaultValue="timeline" className="space-y-4">
-          <TabsList>
+          <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap">
             <TabsTrigger value="timeline">Timeline view</TabsTrigger>
             <TabsTrigger value="table">Table view</TabsTrigger>
+            <TabsTrigger value="map">Map mode</TabsTrigger>
           </TabsList>
 
           <TabsContent value="timeline">
@@ -735,6 +766,10 @@ export default function TravelHistoryTrackerApp() {
           <TabsContent value="table">
             <TableView entries={filtered} onDeleteSelected={deleteSelectedEntries} deletingSelected={deletingSelected} />
           </TabsContent>
+
+          <TabsContent value="map">
+            <MapView entries={filtered} selectedCountry={countryFilter} onCountrySelect={setCountryFilter} />
+          </TabsContent>
         </Tabs>
 
         <EntryDialog
@@ -746,6 +781,10 @@ export default function TravelHistoryTrackerApp() {
           onSave={saveEntry}
         />
       </div>
+
+      <Button className="fixed bottom-5 right-5 h-12 rounded-full px-5 shadow-xl md:hidden" onClick={openNewModal}>
+        <Plus className="mr-2 h-4 w-4" /> Quick add
+      </Button>
     </div>
   );
 }

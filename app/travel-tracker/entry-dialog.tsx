@@ -64,18 +64,6 @@ export function EntryDialog({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label>Purpose</Label>
-              <Input
-                value={form.purpose}
-                onChange={(e) => onFormChange({ ...form, purpose: e.target.value })}
-                placeholder="Vacation / Work / Transit"
-                className="mt-2 h-11"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
               <Label>From</Label>
               <Select
                 value={form.fromCountry || ""}
@@ -113,12 +101,24 @@ export function EntryDialog({
             </div>
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label>City (optional)</Label>
+              <Input
+                value={form.purpose}
+                onChange={(e) => onFormChange({ ...form, purpose: e.target.value })}
+                placeholder="e.g. Kuala Lumpur"
+                className="mt-2 h-11"
+              />
+            </div>
+          </div>
+
           <div>
-            <Label>Notes</Label>
+            <Label>Purpose</Label>
             <Input
               value={form.notes}
               onChange={(e) => onFormChange({ ...form, notes: e.target.value })}
-              placeholder="Places visited in that country (optional)"
+              placeholder="e.g. Vacation / Work / Transit"
               className="mt-2 h-11"
             />
           </div>

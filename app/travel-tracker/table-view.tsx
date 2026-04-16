@@ -109,8 +109,8 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
               <div>Month</div>
               <div>From</div>
               <div>To</div>
+              <div>City</div>
               <div>Purpose</div>
-              <div>Notes</div>
             </div>
             {sortedEntries.map((entry) => (
               <div key={entry.id} className="grid grid-cols-[40px_repeat(8,minmax(0,1fr))] gap-3 border-b border-slate-200/70 px-5 py-4 text-sm text-slate-700 transition-colors hover:bg-slate-50/80">

@@ -60,8 +60,8 @@ export function exportToExcel(entries: TravelEntry[]): void {
     From: item.from,
     To: item.to,
     Country: item.country,
-    Purpose: item.purpose,
-    Notes: item.notes,
+    City: item.purpose,
+    Purpose: item.notes,
   }));
 
   const ws = XLSX.utils.json_to_sheet(rows);
@@ -118,8 +118,8 @@ function parseFlatRows(rows: (string | number | Date)[][]): TravelEntry[] {
   const fromIndex = headerIndex(headers, ["from", "departure", "origin"]);
   const toIndex = headerIndex(headers, ["to", "destination"]);
   const countryIndex = headerIndex(headers, ["country", "destination country"]);
-  const purposeIndex = headerIndex(headers, ["purpose"]);
-  const notesIndex = headerIndex(headers, ["notes", "note"]);
+  const purposeIndex = headerIndex(headers, ["city", "purpose"]);
+  const notesIndex = headerIndex(headers, ["notes", "note", "purpose", "trip purpose"]);
 
   if (dateIndex === -1 || fromIndex === -1 || toIndex === -1) {
     return [];

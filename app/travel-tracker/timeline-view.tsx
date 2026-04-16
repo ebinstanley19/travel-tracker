@@ -156,7 +156,7 @@ export function TimelineView({
                                   Cross-month trip
                                 </Badge>
                               ) : null}
-                              {entry.purpose && <Badge className="rounded-full border-amber-200 bg-amber-50 px-3 py-1 text-amber-800" variant="outline">{entry.purpose}</Badge>}
+                              {entry.purpose && <Badge className="rounded-full border-amber-200 bg-amber-50 px-3 py-1 text-amber-800" variant="outline">City: {entry.purpose}</Badge>}
                             </div>
                             <div className="grid gap-2 text-slate-950 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
                               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
@@ -173,7 +173,7 @@ export function TimelineView({
                                 <p className="text-sm font-semibold tracking-[-0.01em]">{displayLocation(entry.to)}</p>
                               </div>
                             </div>
-                            {entry.notes && <p className="text-sm leading-6 text-slate-600">{entry.notes}</p>}
+                            {entry.notes && <p className="text-sm leading-6 text-slate-600"><span className="font-semibold text-slate-700">Purpose:</span> {entry.notes}</p>}
                           </div>
                           <div className="relative" data-timeline-options-menu>
                             <Button
