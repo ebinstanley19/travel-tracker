@@ -81,6 +81,15 @@ export default function TravelHistoryTrackerApp() {
     }
 
     let isMounted = true;
+    const authTimeout = setTimeout(() => {
+      if (!isMounted) return;
+
+      console.warn("Auth bootstrap timed out; falling back to login screen.");
+      setUser(null);
+      setEntries([]);
+      setAuthInfo("Session check timed out. Please log in again.");
+      setAuthLoading(false);
+    }, 8000);
 
     async function bootstrapAuth() {
       try {
@@ -114,6 +123,7 @@ export default function TravelHistoryTrackerApp() {
         }
       } finally {
         if (isMounted) {
+          clearTimeout(authTimeout);
           setAuthLoading(false);
         }
       }
@@ -131,6 +141,7 @@ export default function TravelHistoryTrackerApp() {
         setEntries([]);
       }
 
+      clearTimeout(authTimeout);
       setAuthLoading(false);
     });
 
@@ -138,6 +149,7 @@ export default function TravelHistoryTrackerApp() {
 
     return () => {
       isMounted = false;
+      clearTimeout(authTimeout);
       authListener.subscription.unsubscribe();
     };
   }, []);
