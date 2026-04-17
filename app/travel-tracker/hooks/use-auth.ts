@@ -137,7 +137,7 @@ export function useAuth() {
     setUser(null);
 
     try {
-      const { error } = await supabase.auth.signOut({ scope: "local" });
+      const { error } = await supabase.auth.signOut({ scope: "global" });
       if (error) {
         setAuthError(`Signed out locally, but Supabase returned: ${error.message}`);
       }

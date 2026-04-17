@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import type { User } from "@supabase/supabase-js";
 import { COUNTRY_OPTIONS } from "@/app/travel-tracker/countries";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -23,6 +25,9 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -80,6 +85,55 @@ export default function ProfilePage() {
     }
 
     setSavingProfile(false);
+  }
+
+  async function deleteAccount(): Promise<void> {
+    setErrorMessage("");
+    if (!user) return;
+
+    setDeleting(true);
+
+    // Re-authenticate to prove the person at the keyboard owns the account.
+    const { error: reAuthError } = await supabase.auth.signInWithPassword({
+      email: userEmail,
+      password: deletePassword,
+    });
+
+    if (reAuthError) {
+      setErrorMessage("Incorrect password. Please try again.");
+      setDeleting(false);
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setErrorMessage("Session expired. Please sign in again.");
+      setDeleting(false);
+      return;
+    }
+
+    const response = await fetch("/api/delete-account", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+
+    let result: { error?: string } = {};
+    try {
+      result = (await response.json()) as { error?: string };
+    } catch {
+      // Response had no JSON body (e.g. unexpected server crash).
+    }
+
+    if (!response.ok) {
+      setErrorMessage(result.error ?? "Failed to delete account.");
+      setDeleting(false);
+      return;
+    }
+
+    localStorage.removeItem("routebook-home-country");
+    localStorage.removeItem("routebook-theme");
+    await supabase.auth.signOut({ scope: "local" });
+    router.push("/");
   }
 
   async function updatePassword(): Promise<void> {
@@ -223,6 +277,51 @@ export default function ProfilePage() {
                 {updatingPassword ? "Updating..." : "Update password"}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border-red-200 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-red-600">Danger zone</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-slate-600">
+              Permanently delete your account and all travel records. This cannot be undone.
+            </p>
+            {!showDeleteConfirm ? (
+              <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
+                <Trash2 className="mr-2 h-4 w-4" /> Delete account
+              </Button>
+            ) : (
+              <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4">
+                <p className="text-sm text-red-700">
+                  Enter your password to confirm permanent deletion.
+                </p>
+                <Input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Your current password"
+                  autoComplete="current-password"
+                  className="border-red-300 bg-white"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    disabled={!deletePassword || deleting}
+                    onClick={deleteAccount}
+                  >
+                    {deleting ? "Deleting..." : "Permanently delete"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
