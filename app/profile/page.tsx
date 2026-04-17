@@ -217,34 +217,39 @@ export default function ProfilePage() {
           </Button>
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input value={userEmail} disabled />
-          </div>
-          <div className="space-y-2">
-            <Label>Full name</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
-          </div>
-          <div className="space-y-2">
-            <Label>Home country</Label>
-            <Select value={homeCountry || "none"} onValueChange={(value) => setHomeCountry(value === "none" ? "" : value)}>
-              <SelectTrigger className="h-10 w-full">
-                <SelectValue placeholder="Select home country" />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                <SelectItem value="none">None</SelectItem>
-                {COUNTRY_OPTIONS.map((country) => (
-                  <SelectItem key={country} value={country}>{country}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button onClick={saveProfile} disabled={savingProfile}>
-            <Save className="mr-2 h-4 w-4" />
-            {savingProfile ? "Saving..." : "Save profile"}
-          </Button>
-        </div>
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle>Account</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input value={userEmail} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label>Full name</Label>
+              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
+            </div>
+            <div className="space-y-2">
+              <Label>Home country</Label>
+              <Select value={homeCountry || "none"} onValueChange={(value) => setHomeCountry(value === "none" ? "" : value)}>
+                <SelectTrigger className="h-10 w-full">
+                  <SelectValue placeholder="Select home country" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  <SelectItem value="none">None</SelectItem>
+                  {COUNTRY_OPTIONS.map((country) => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={saveProfile} disabled={savingProfile}>
+              <Save className="mr-2 h-4 w-4" />
+              {savingProfile ? "Saving..." : "Save profile"}
+            </Button>
+          </CardContent>
+        </Card>
 
         <Card className="rounded-2xl shadow-sm">
           <CardHeader
