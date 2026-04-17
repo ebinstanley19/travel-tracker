@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronDown, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, Palette, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { COUNTRY_OPTIONS } from "@/app/travel-tracker/countries";
 
+type ThemePreset = "sand" | "ocean" | "sunset";
+
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -21,6 +23,7 @@ export default function ProfilePage() {
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [homeCountry, setHomeCountry] = useState("");
+  const [themePreset, setThemePreset] = useState<ThemePreset>("sand");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -60,6 +63,19 @@ export default function ProfilePage() {
       setHomeCountry(storedHomeCountry);
     }
   }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("routebook-theme");
+    if (stored === "sand" || stored === "ocean" || stored === "sunset") {
+      setThemePreset(stored);
+    }
+  }, []);
+
+  function applyTheme(next: ThemePreset): void {
+    setThemePreset(next);
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("routebook-theme", next);
+  }
 
   const userEmail = useMemo(() => user?.email ?? "", [user]);
 
@@ -216,6 +232,19 @@ export default function ProfilePage() {
             <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" />Back to dashboard</Link>
           </Button>
         </div>
+
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Palette className="h-4 w-4 text-muted-foreground" /> Theme</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant={themePreset === "sand" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("sand")}>Sand</Button>
+              <Button variant={themePreset === "ocean" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("ocean")}>Ocean</Button>
+              <Button variant={themePreset === "sunset" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("sunset")}>Sunset</Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="rounded-2xl shadow-sm">
           <CardHeader>

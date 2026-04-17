@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Download, HelpCircle, LogOut, Palette, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
+import { ChevronDown, Download, HelpCircle, LogOut, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,8 +19,6 @@ import { useFilters } from "@/app/travel-tracker/hooks/use-filters";
 import { useTravelEntries } from "@/app/travel-tracker/hooks/use-travel-entries";
 import { downloadImportTemplate, exportToExcel } from "@/app/travel-tracker/utils";
 
-type ThemePreset = "sand" | "ocean" | "sunset";
-
 export default function TravelHistoryTrackerApp() {
   const auth = useAuth();
   const [homeCountry, setHomeCountry] = useState("");
@@ -30,8 +28,6 @@ export default function TravelHistoryTrackerApp() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [themePreset, setThemePreset] = useState<ThemePreset>("sand");
-
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
 
   const greeting = (() => {
@@ -44,7 +40,6 @@ export default function TravelHistoryTrackerApp() {
   useEffect(() => {
     const storedTheme = typeof window !== "undefined" ? localStorage.getItem("routebook-theme") : null;
     if (storedTheme === "sand" || storedTheme === "ocean" || storedTheme === "sunset") {
-      setThemePreset(storedTheme);
       document.documentElement.setAttribute("data-theme", storedTheme);
       return;
     }
@@ -67,12 +62,6 @@ export default function TravelHistoryTrackerApp() {
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
-
-  function applyTheme(nextTheme: ThemePreset): void {
-    setThemePreset(nextTheme);
-    document.documentElement.setAttribute("data-theme", nextTheme);
-    localStorage.setItem("routebook-theme", nextTheme);
-  }
 
   function triggerImport(): void {
     fileInputRef.current?.click();
@@ -171,16 +160,6 @@ export default function TravelHistoryTrackerApp() {
                       {auth.user?.user_metadata?.full_name ?? auth.user?.email?.split("@")[0]}
                     </p>
                     <p className="truncate text-xs text-slate-500">{auth.user?.email}</p>
-                  </div>
-                  <div className="border-b border-slate-100 px-3 py-2">
-                    <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      <Palette className="h-3.5 w-3.5" /> Theme
-                    </p>
-                    <div className="mt-2 grid grid-cols-3 gap-2">
-                      <Button variant={themePreset === "sand" ? "default" : "outline"} size="sm" className="h-8" onClick={() => applyTheme("sand")}>Sand</Button>
-                      <Button variant={themePreset === "ocean" ? "default" : "outline"} size="sm" className="h-8" onClick={() => applyTheme("ocean")}>Ocean</Button>
-                      <Button variant={themePreset === "sunset" ? "default" : "outline"} size="sm" className="h-8" onClick={() => applyTheme("sunset")}>Sunset</Button>
-                    </div>
                   </div>
                   <Button
                     variant="ghost"
