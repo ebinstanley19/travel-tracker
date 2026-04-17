@@ -181,7 +181,7 @@ If you suspect the service role key has been exposed:
 ```bash
 npm outdated          # see what's behind
 npm update            # update within semver range
-npm run build         # verify the build passes before deploying
+npm run build         # verify the build passes before deploying it
 ```
 
 ### Checking for security vulnerabilities
