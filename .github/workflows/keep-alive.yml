@@ -1,0 +1,15 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # runs every 6 hours
+  workflow_dispatch: # allow manual run
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping app
+        run: |
+          curl -s https://travel-tracker-tan.vercel.app > /dev/null
