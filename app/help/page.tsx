@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function HelpPage() {
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-3xl space-y-6">
 
-        <div className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/80 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Help</h1>
             <p className="mt-1 text-sm text-muted-foreground">Everything you need to know about using Route Book.</p>
@@ -18,7 +18,7 @@ export default function HelpPage() {
           </Button>
         </div>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Adding a trip</CardTitle>
           </CardHeader>
@@ -36,7 +36,7 @@ export default function HelpPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Editing and deleting</CardTitle>
           </CardHeader>
@@ -46,7 +46,7 @@ export default function HelpPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Search and filters</CardTitle>
           </CardHeader>
@@ -56,12 +56,13 @@ export default function HelpPage() {
               <li><strong>Search</strong> — matches against countries, cities, locations, and notes.</li>
               <li><strong>Country</strong> — narrows to a single country across all views.</li>
               <li><strong>Year</strong> — narrows to a specific year.</li>
+              <li><strong>From date / To date</strong> — filters entries that overlap a specific date range. You can set just one end of the range.</li>
             </ul>
-            <p>All three filters work together. Clear a filter by selecting <strong>All</strong> from its dropdown or clearing the search field.</p>
+            <p>All filters work together. Click <strong>Clear all</strong> to reset them at once, or clear each control individually.</p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Views</CardTitle>
           </CardHeader>
@@ -78,10 +79,14 @@ export default function HelpPage() {
               <p className="font-semibold text-slate-800">Map</p>
               <p>Countries you have visited appear as circle markers — the larger the circle, the more visits. Click a circle to select that country and see a popup with visit count and cities. The <strong>Top countries</strong> sidebar on the right lists your most-visited countries; click any to jump to it on the map. Click the map background to clear the selection.</p>
             </div>
+            <div className="space-y-2">
+              <p className="font-semibold text-slate-800">Insights</p>
+              <p>A summary of your travel history — total trips, countries, continents, nights abroad, trips by year, top countries, busiest months, continent breakdown, personal records, and milestone badges. Also accessible as a standalone page from <strong>Settings → Insights</strong>.</p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Importing and exporting</CardTitle>
           </CardHeader>
@@ -102,14 +107,22 @@ export default function HelpPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Profile and settings</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-slate-700">
             <div className="space-y-2">
               <p className="font-semibold text-slate-800">Theme</p>
-              <p>Open <strong>Settings</strong> and choose Sand, Ocean, or Sunset. Your preference is saved in the browser.</p>
+              <p>Go to <strong>Settings → Profile → Theme</strong> and choose Sand, Ocean, Sunset, or White. Your preference is saved in the browser.</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-semibold text-slate-800">Date format</p>
+              <p>Go to <strong>Settings → Profile → Preferences</strong> and choose <strong>DD MMM YYYY</strong> (e.g. 17 Apr 2026) or <strong>MMM DD, YYYY</strong> (e.g. Apr 17, 2026). Applied across all views.</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-semibold text-slate-800">Default view</p>
+              <p>Go to <strong>Settings → Profile → Preferences</strong> and choose which tab opens by default when you sign in — Timeline, Table, Map, or Insights.</p>
             </div>
             <div className="space-y-2">
               <p className="font-semibold text-slate-800">Home country</p>
@@ -123,6 +136,22 @@ export default function HelpPage() {
               <p className="font-semibold text-slate-800">Delete account</p>
               <p>Go to <strong>Settings → Profile → Delete Account</strong>. Confirm with your password. This permanently removes all your trips and your account and cannot be undone.</p>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle>Visa tracker</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-slate-700">
+            <p>Access via <strong>Settings → Visa tracker</strong>. Store a record for each visa or entry permit:</p>
+            <ul className="space-y-1 pl-4 list-disc text-slate-600">
+              <li><strong>Country, Type</strong> — where the visa is for and what kind (Tourist, Work, etc.).</li>
+              <li><strong>Entry / Exit date</strong> — when you entered and left.</li>
+              <li><strong>Max stay</strong> — the maximum days permitted on that visa.</li>
+              <li><strong>Expiry date</strong> — when the visa itself expires. Rows turn amber when expiry is within 30 days and red when already expired.</li>
+            </ul>
+            <p>Click the pencil icon to edit a record or the bin icon to delete it.</p>
           </CardContent>
         </Card>
 

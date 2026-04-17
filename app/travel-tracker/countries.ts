@@ -197,6 +197,38 @@ export const COUNTRY_OPTIONS = [
   "Zimbabwe",
 ] as const;
 
+export const SCHENGEN_COUNTRIES = [
+  "Austria",
+  "Belgium",
+  "Bulgaria",
+  "Croatia",
+  "Czech Republic",
+  "Denmark",
+  "Estonia",
+  "Finland",
+  "France",
+  "Germany",
+  "Greece",
+  "Hungary",
+  "Iceland",
+  "Italy",
+  "Latvia",
+  "Liechtenstein",
+  "Lithuania",
+  "Luxembourg",
+  "Malta",
+  "Netherlands",
+  "Norway",
+  "Poland",
+  "Portugal",
+  "Romania",
+  "Slovakia",
+  "Slovenia",
+  "Spain",
+  "Sweden",
+  "Switzerland",
+] as const;
+
 const COUNTRY_ALIASES: Record<string, string> = {
   sg: "Singapore",
   sgp: "Singapore",

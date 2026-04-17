@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import { ArrowUpDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useDateFormat } from "@/app/travel-tracker/hooks/use-date-format";
 import type { TravelEntry } from "@/app/travel-tracker/types";
-import { displayLocation, formatMonth, formatYear, prettyDate } from "@/app/travel-tracker/utils";
+import { displayLocation, formatMonth, formatYear, prettyDateWithFormat } from "@/app/travel-tracker/utils";
 
 interface TableViewProps {
   entries: TravelEntry[];
@@ -17,6 +18,7 @@ type SortDirection = "asc" | "desc";
 export function TableView({ entries, onDeleteSelected, deletingSelected = false }: TableViewProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const dateFormat = useDateFormat();
 
   const entryIds = useMemo(() => entries.map((entry) => entry.id), [entries]);
   const visibleSelectedIds = useMemo(
@@ -114,8 +116,8 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
                     aria-label={`Select ${entry.id}`}
                   />
                 </div>
-                <div>{prettyDate(entry.date)}</div>
-                <div>{entry.endDate ? prettyDate(entry.endDate) : "-"}</div>
+                <div>{prettyDateWithFormat(entry.date, dateFormat)}</div>
+                <div>{entry.endDate ? prettyDateWithFormat(entry.endDate, dateFormat) : "-"}</div>
                 <div>{formatYear(entry.date || entry.endDate)}</div>
                 <div>{formatMonth(entry.date || entry.endDate)}</div>
                 <div>{displayLocation(entry.from)}</div>

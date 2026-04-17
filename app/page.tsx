@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Download, HelpCircle, LogOut, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthCard } from "@/app/travel-tracker/auth-card";
 import { EntryDialog } from "@/app/travel-tracker/entry-dialog";
@@ -28,6 +27,7 @@ export default function TravelHistoryTrackerApp() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [defaultView, setDefaultView] = useState("timeline");
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
 
   const greeting = (() => {
@@ -39,7 +39,7 @@ export default function TravelHistoryTrackerApp() {
 
   useEffect(() => {
     const storedTheme = typeof window !== "undefined" ? localStorage.getItem("routebook-theme") : null;
-    if (storedTheme === "sand" || storedTheme === "ocean" || storedTheme === "sunset") {
+    if (storedTheme === "sand" || storedTheme === "ocean" || storedTheme === "sunset" || storedTheme === "white") {
       document.documentElement.setAttribute("data-theme", storedTheme);
       return;
     }
@@ -50,6 +50,13 @@ export default function TravelHistoryTrackerApp() {
     const storedHomeCountry = typeof window !== "undefined" ? localStorage.getItem("routebook-home-country") : null;
     if (storedHomeCountry) {
       setHomeCountry(storedHomeCountry);
+    }
+  }, []);
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("routebook-default-view") : null;
+    if (stored === "table" || stored === "map" || stored === "insights") {
+      setDefaultView(stored);
     }
   }, []);
 
@@ -67,15 +74,25 @@ export default function TravelHistoryTrackerApp() {
     fileInputRef.current?.click();
   }
 
+  const insightLine = "Here's everything you've logged.";
+
   if (auth.authLoading || (!!auth.user && travelEntries.entriesLoading)) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4 md:p-8">
-        <div className="mx-auto max-w-7xl">
-          <Card className="rounded-2xl shadow-sm">
-            <CardContent className="p-6 text-sm text-muted-foreground">
-              Loading your session...
-            </CardContent>
-          </Card>
+      <div className="min-h-screen p-4 md:p-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <div className="rounded-3xl bg-white/80 p-6 shadow-sm backdrop-blur-xl">
+            <div className="h-3.5 w-20 animate-pulse rounded-full bg-slate-200" />
+            <div className="mt-4 h-7 w-44 animate-pulse rounded-full bg-slate-200" />
+            <div className="mt-2.5 h-3.5 w-56 animate-pulse rounded-full bg-slate-100" />
+          </div>
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-32 animate-pulse rounded-[2rem] bg-white/70" style={{ animationDelay: `${i * 60}ms` }} />
+            ))}
+          </div>
+          <div className="h-16 animate-pulse rounded-[2rem] bg-white/70 backdrop-blur-xl" />
+          <div className="h-10 animate-pulse rounded-2xl bg-white/70" />
+          <div className="h-64 animate-pulse rounded-[2rem] bg-white/70 backdrop-blur-xl" />
         </div>
       </div>
     );
@@ -83,49 +100,41 @@ export default function TravelHistoryTrackerApp() {
 
   if (!auth.user) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-slate-50 p-4 md:p-8">
-        <div className="pointer-events-none absolute -left-24 -top-16 h-72 w-72 rounded-full bg-amber-200/45 blur-3xl" />
-        <div className="pointer-events-none absolute -right-24 top-12 h-80 w-80 rounded-full bg-sky-200/40 blur-3xl" />
-        <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <Card className="rounded-[2rem] border-0 bg-[linear-gradient(145deg,#0b1324,#142748_65%,#2859a0)] p-0 text-white shadow-[0_24px_90px_rgba(12,26,52,0.3)]">
-            <CardContent className="space-y-6 p-8 md:p-10">
-              <div className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/85">
-                Private travel archive
-              </div>
-              <div>
-                <h1 className="text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-5xl">
-                  Every border crossed. Every trip logged. All yours.
-                </h1>
-                <p className="mt-4 max-w-xl text-sm leading-7 text-white/78 md:text-base">
-                  A private archive for everywhere you've been.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <div className="flex items-center justify-center">
-            <AuthCard
-              mode={auth.authMode}
-              fullName={auth.authFullName}
-              email={auth.authEmail}
-              password={auth.authPassword}
-              pending={auth.authPending}
-              errorMessage={auth.authError}
-              infoMessage={auth.authInfo}
-              onModeChange={auth.setAuthMode}
-              onFullNameChange={auth.setAuthFullName}
-              onEmailChange={auth.setAuthEmail}
-              onPasswordChange={auth.setAuthPassword}
-              onForgotPassword={auth.handleForgotPassword}
-              onSubmit={auth.handleAuthSubmit}
-            />
+      <div className="grid min-h-screen bg-white lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="flex flex-col justify-center bg-[linear-gradient(145deg,#0b1324,#142748_65%,#2859a0)] p-12 text-white">
+          <div className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/85 w-fit">
+            Private travel archive
           </div>
+          <h1 className="mt-6 text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-5xl">
+            Every border crossed. Every trip logged. All yours.
+          </h1>
+          <p className="mt-4 max-w-xl text-sm leading-7 text-white/78 md:text-base">
+            A private archive for everywhere you&apos;ve been.
+          </p>
+        </div>
+        <div className="flex items-center justify-center p-8">
+          <AuthCard
+            mode={auth.authMode}
+            fullName={auth.authFullName}
+            email={auth.authEmail}
+            password={auth.authPassword}
+            pending={auth.authPending}
+            errorMessage={auth.authError}
+            infoMessage={auth.authInfo}
+            onModeChange={auth.setAuthMode}
+            onFullNameChange={auth.setAuthFullName}
+            onEmailChange={auth.setAuthEmail}
+            onPasswordChange={auth.setAuthPassword}
+            onForgotPassword={auth.handleForgotPassword}
+            onSubmit={auth.handleAuthSubmit}
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 pb-24 md:p-8 md:pb-8">
+    <div className="min-h-screen p-4 pb-24 md:p-8 md:pb-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
@@ -136,7 +145,7 @@ export default function TravelHistoryTrackerApp() {
               {greeting}, {auth.user?.user_metadata?.full_name?.split(" ")[0] ?? auth.user?.email?.split("@")[0]}.
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              Here's everything you've logged.
+              {insightLine}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -176,6 +185,16 @@ export default function TravelHistoryTrackerApp() {
                   >
                     <Link href="/help">
                       <HelpCircle className="mr-2 h-4 w-4" /> Help
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="h-11 w-full justify-start rounded-none px-3"
+                    onClick={() => setSettingsOpen(false)}
+                  >
+                    <Link href="/visa">
+                      <UserCircle2 className="mr-2 h-4 w-4" /> Visa tracker
                     </Link>
                   </Button>
                   <Button
@@ -226,30 +245,40 @@ export default function TravelHistoryTrackerApp() {
           />
         </div>
 
-        <StatsCards
-          totalTrips={filters.stats.totalTrips}
-          uniqueCountries={filters.stats.uniqueCountries}
-          yearsCovered={filters.stats.yearsCovered}
-          topCountry={filters.stats.topCountry}
-          topCountryVisits={filters.stats.topCountryVisits}
-        />
+        <div className="animate-fade-up" style={{ animationDelay: "60ms" }}>
+          <StatsCards
+            totalTrips={filters.stats.totalTrips}
+            uniqueCountries={filters.stats.uniqueCountries}
+            yearsCovered={filters.stats.yearsCovered}
+            topCountry={filters.stats.topCountry}
+            topCountryVisits={filters.stats.topCountryVisits}
+          />
+        </div>
 
-        <FiltersCard
-          search={filters.search}
-          countryFilter={filters.countryFilter}
-          yearFilter={filters.yearFilter}
-          countries={filters.countries}
-          years={filters.years}
-          onSearchChange={filters.setSearch}
-          onCountryChange={filters.setCountryFilter}
-          onYearChange={filters.setYearFilter}
-        />
+        <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
+          <FiltersCard
+            search={filters.search}
+            countryFilter={filters.countryFilter}
+            yearFilter={filters.yearFilter}
+            fromDateFilter={filters.fromDateFilter}
+            toDateFilter={filters.toDateFilter}
+            countries={filters.countries}
+            years={filters.years}
+            onSearchChange={filters.setSearch}
+            onCountryChange={filters.setCountryFilter}
+            onYearChange={filters.setYearFilter}
+            onFromDateChange={filters.setFromDateFilter}
+            onToDateChange={filters.setToDateFilter}
+          />
+        </div>
 
-        <Tabs defaultValue="timeline" className="space-y-4">
-          <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap">
-            <TabsTrigger value="timeline">Timeline view</TabsTrigger>
-            <TabsTrigger value="table">Table view</TabsTrigger>
-            <TabsTrigger value="map">Map mode</TabsTrigger>
+        <div className="animate-fade-up" style={{ animationDelay: "180ms" }}>
+        <Tabs defaultValue={defaultView} className="space-y-4">
+          <TabsList className="h-auto w-full justify-start overflow-x-auto whitespace-nowrap rounded-2xl border border-slate-200/70 bg-white/80 p-1.5 backdrop-blur-sm shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+            <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="timeline">Timeline view</TabsTrigger>
+            <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="table">Table view</TabsTrigger>
+            <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="map">Map mode</TabsTrigger>
+            <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="insights">Insights</TabsTrigger>
           </TabsList>
 
           <TabsContent value="timeline">
@@ -279,7 +308,12 @@ export default function TravelHistoryTrackerApp() {
               onCountrySelect={filters.setCountryFilter}
             />
           </TabsContent>
+
+          <TabsContent value="insights">
+            <InsightsInline entries={travelEntries.entries} />
+          </TabsContent>
         </Tabs>
+        </div>
 
         <EntryDialog
           open={travelEntries.open}
@@ -297,6 +331,113 @@ export default function TravelHistoryTrackerApp() {
       >
         <Plus className="mr-2 h-4 w-4" /> Quick add
       </Button>
+    </div>
+  );
+}
+
+// Inline insights component for the tab — lightweight version linking to the full page
+import type { TravelEntry } from "@/app/travel-tracker/types";
+import { getCountryFromLocation, prettyDate } from "@/app/travel-tracker/utils";
+import { CONTINENT_MAP } from "@/app/travel-tracker/continents";
+
+function InsightsInline({ entries }: { entries: TravelEntry[] }) {
+  const totalTrips = entries.length;
+
+  const allToCountries = entries.map((e) => getCountryFromLocation(e.to) || e.country).filter(Boolean);
+  const uniqueCountries = new Set(entries.flatMap((e) => {
+    const from = getCountryFromLocation(e.from);
+    const to = getCountryFromLocation(e.to) || e.country;
+    return [from, to].filter(Boolean);
+  })).size;
+
+  const continents = new Set(allToCountries.map((c) => CONTINENT_MAP[c]).filter(Boolean));
+
+  let totalNights = 0;
+  let longestTrip: { dest: string; nights: number } | null = null;
+  for (const entry of entries) {
+    if (entry.date && entry.endDate && entry.date !== entry.endDate) {
+      const n = Math.round((new Date(entry.endDate).getTime() - new Date(entry.date).getTime()) / (1000 * 60 * 60 * 24));
+      if (n > 0) {
+        totalNights += n;
+        if (!longestTrip || n > longestTrip.nights) {
+          longestTrip = { dest: getCountryFromLocation(entry.to) || entry.country || "—", nights: n };
+        }
+      }
+    }
+  }
+
+  const countryCount: Record<string, number> = {};
+  for (const c of allToCountries) {
+    countryCount[c] = (countryCount[c] || 0) + 1;
+  }
+  const top5 = Object.entries(countryCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const maxCount = top5[0]?.[1] ?? 1;
+
+  const sorted = [...entries].sort((a, b) => new Date(b.date || b.endDate).getTime() - new Date(a.date || a.endDate).getTime());
+  const firstTrip = sorted[sorted.length - 1];
+
+  if (totalTrips === 0) {
+    return (
+      <div className="rounded-[2rem] border border-white/60 bg-white/75 py-16 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <p className="text-sm text-slate-400">Add some trips to see your insights.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 rounded-[2rem] border border-white/60 bg-white/75 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold tracking-tight">Your travel at a glance</h2>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/insights">Full insights →</Link>
+        </Button>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: "Trips", value: totalTrips },
+          { label: "Countries", value: uniqueCountries },
+          { label: "Continents", value: continents.size },
+          { label: "Nights abroad", value: totalNights },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-xl border border-slate-100 bg-slate-50/60 p-4 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{value}</p>
+          </div>
+        ))}
+      </div>
+      {top5.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-slate-700">Top destinations</p>
+          {top5.map(([country, count]) => (
+            <div key={country} className="flex items-center gap-3">
+              <span className="w-28 truncate text-sm text-slate-700">{country}</span>
+              <div className="flex-1 h-2 rounded-full bg-slate-100">
+                <div
+                  className="h-2 rounded-full bg-slate-800 transition-all"
+                  style={{ width: `${Math.round((count / maxCount) * 100)}%` }}
+                />
+              </div>
+              <span className="w-5 text-right text-xs tabular-nums text-slate-500">{count}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {longestTrip && (
+          <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Longest trip</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-800">{longestTrip.dest} · {longestTrip.nights}n</p>
+          </div>
+        )}
+        {firstTrip && (
+          <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">First trip</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-800">
+              {getCountryFromLocation(firstTrip.to) || firstTrip.country || "—"} · {prettyDate(firstTrip.date)}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

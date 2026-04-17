@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { TravelEntry, YearMonthGroup } from "@/app/travel-tracker/types";
+import { CONTINENT_MAP } from "@/app/travel-tracker/continents";
 import { formatMonth, formatYear, getCountryFromLocation, getEntryCountries, monthOrder, sortEntries } from "@/app/travel-tracker/utils";
 
 function getVisitedCountry(entry: TravelEntry): string {
@@ -20,11 +21,15 @@ export function useFilters({ entries, homeCountry = "" }: { entries: TravelEntry
   const [search, setSearch] = useState("");
   const [countryFilter, setCountryFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
+  const [continentFilter, setContinentFilter] = useState("all");
+  const [fromDateFilter, setFromDateFilter] = useState("");
+  const [toDateFilter, setToDateFilter] = useState("");
 
-  const countries = useMemo(
-    () => [...new Set(entries.flatMap((entry) => getEntryCountries(entry)))].sort(),
-    [entries]
-  );
+  const countries = useMemo(() => {
+    const allCountries = [...new Set(entries.flatMap((entry) => getEntryCountries(entry)))].sort();
+    if (continentFilter === "all") return allCountries;
+    return allCountries.filter((c) => CONTINENT_MAP[c] === continentFilter);
+  }, [entries, continentFilter]);
 
   const years = useMemo(
     () =>
@@ -41,14 +46,34 @@ export function useFilters({ entries, homeCountry = "" }: { entries: TravelEntry
           const blob =
             `${entry.date} ${entry.endDate} ${entry.from} ${entry.to} ${entry.country} ${entry.purpose} ${entry.notes}`.toLowerCase();
           const matchesSearch = blob.includes(search.toLowerCase());
+
+          const entryCountries = getEntryCountries(entry);
           const matchesCountry =
-            countryFilter === "all" || getEntryCountries(entry).includes(countryFilter);
+            countryFilter === "all" || entryCountries.includes(countryFilter);
+
           const matchesYear =
             yearFilter === "all" || formatYear(entry.date || entry.endDate) === yearFilter;
-          return matchesSearch && matchesCountry && matchesYear;
+
+          const matchesContinent =
+            continentFilter === "all" ||
+            entryCountries.some((c) => CONTINENT_MAP[c] === continentFilter);
+
+          let matchesDateRange = true;
+          if (fromDateFilter || toDateFilter) {
+            const entryStart = entry.date ? new Date(entry.date).getTime() : null;
+            const entryEnd = entry.endDate ? new Date(entry.endDate).getTime() : entryStart;
+            const rangeStart = fromDateFilter ? new Date(fromDateFilter).getTime() : null;
+            const rangeEnd = toDateFilter ? new Date(toDateFilter).getTime() : null;
+            if (entryStart !== null && entryEnd !== null) {
+              if (rangeStart !== null && entryEnd < rangeStart) matchesDateRange = false;
+              if (rangeEnd !== null && entryStart > rangeEnd) matchesDateRange = false;
+            }
+          }
+
+          return matchesSearch && matchesCountry && matchesYear && matchesContinent && matchesDateRange;
         })
       ),
-    [entries, search, countryFilter, yearFilter]
+    [entries, search, countryFilter, yearFilter, continentFilter, fromDateFilter, toDateFilter]
   );
 
   const groupedByYearMonth = useMemo<YearMonthGroup[]>(() => {
@@ -107,9 +132,15 @@ export function useFilters({ entries, homeCountry = "" }: { entries: TravelEntry
     search,
     countryFilter,
     yearFilter,
+    continentFilter,
+    fromDateFilter,
+    toDateFilter,
     setSearch,
     setCountryFilter,
     setYearFilter,
+    setContinentFilter,
+    setFromDateFilter,
+    setToDateFilter,
     countries,
     years,
     filtered,

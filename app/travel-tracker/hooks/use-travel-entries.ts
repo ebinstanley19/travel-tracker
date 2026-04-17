@@ -117,7 +117,7 @@ export function useTravelEntries({ user, homeCountry = "" }: { user: User | null
 
   function openNewModal(): void {
     setEditingId(null);
-    setForm({ ...emptyForm, fromCountry: homeCountry.trim() });
+    setForm(emptyForm);
     setOpen(true);
   }
 

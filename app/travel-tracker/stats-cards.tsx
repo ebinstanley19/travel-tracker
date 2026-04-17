@@ -40,12 +40,16 @@ export function StatsCards({ totalTrips, uniqueCountries, yearsCovered, topCount
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {items.map((item) => (
-        <Card key={item.label} className={`overflow-hidden rounded-[2rem] border-0 shadow-[0_20px_60px_rgba(15,23,42,0.08)] bg-gradient-to-br ${item.tone}`}>
+      {items.map((item, i) => (
+        <Card
+          key={item.label}
+          className={`animate-fade-up overflow-hidden rounded-[2rem] border-0 shadow-[0_20px_60px_rgba(15,23,42,0.08)] bg-gradient-to-br ${item.tone}`}
+          style={{ animationDelay: `${i * 60}ms` }}
+        >
           <CardContent className="relative p-6">
             <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-white/15 blur-2xl" />
             <div className="text-[11px] font-semibold uppercase tracking-[0.24em] opacity-70">{item.label}</div>
-            <div className="mt-4 text-4xl font-semibold tracking-[-0.05em]">{item.value}</div>
+            <div className="mt-4 tabular-nums text-4xl font-semibold tracking-[-0.05em]">{item.value}</div>
             <p className="mt-4 max-w-[16rem] text-sm leading-6 opacity-80">{item.meta}</p>
           </CardContent>
         </Card>

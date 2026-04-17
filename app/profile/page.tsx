@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { COUNTRY_OPTIONS } from "@/app/travel-tracker/countries";
 
-type ThemePreset = "sand" | "ocean" | "sunset";
+type ThemePreset = "sand" | "ocean" | "sunset" | "white";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -24,6 +24,8 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState("");
   const [homeCountry, setHomeCountry] = useState("");
   const [themePreset, setThemePreset] = useState<ThemePreset>("sand");
+  const [dateFormat, setDateFormat] = useState<"dmy" | "mdy">("dmy");
+  const [defaultView, setDefaultView] = useState("timeline");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -66,15 +68,37 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("routebook-theme");
-    if (stored === "sand" || stored === "ocean" || stored === "sunset") {
+    if (stored === "sand" || stored === "ocean" || stored === "sunset" || stored === "white") {
       setThemePreset(stored);
+    }
+  }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("routebook-date-format");
+    if (stored === "mdy") setDateFormat("mdy");
+  }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("routebook-default-view");
+    if (stored === "table" || stored === "map" || stored === "insights") {
+      setDefaultView(stored);
     }
   }, []);
 
   function applyTheme(next: ThemePreset): void {
     setThemePreset(next);
-    document.documentElement.setAttribute("data-theme", next);
     localStorage.setItem("routebook-theme", next);
+    document.documentElement.setAttribute("data-theme", next);
+  }
+
+  function applyDateFormat(fmt: "dmy" | "mdy"): void {
+    setDateFormat(fmt);
+    localStorage.setItem("routebook-date-format", fmt);
+  }
+
+  function applyDefaultView(view: string): void {
+    setDefaultView(view);
+    localStorage.setItem("routebook-default-view", view);
   }
 
   const userEmail = useMemo(() => user?.email ?? "", [user]);
@@ -151,6 +175,8 @@ export default function ProfilePage() {
 
     localStorage.removeItem("routebook-home-country");
     localStorage.removeItem("routebook-theme");
+    localStorage.removeItem("routebook-date-format");
+    localStorage.removeItem("routebook-default-view");
     await supabase.auth.signOut({ scope: "local" });
     router.push("/");
   }
@@ -192,7 +218,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-slate-50 p-4 md:p-8">
         <div className="mx-auto max-w-3xl">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <CardContent className="p-6 text-sm text-muted-foreground">Loading profile...</CardContent>
           </Card>
         </div>
@@ -204,7 +230,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-slate-50 p-4 md:p-8">
         <div className="mx-auto max-w-3xl space-y-4">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <CardHeader>
               <CardTitle>Not signed in</CardTitle>
             </CardHeader>
@@ -221,32 +247,35 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-3xl space-y-6">
-        <div className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/80 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Profile settings</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Manage account details and password settings.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Manage account details and preferences.</p>
           </div>
           <Button asChild variant="outline">
             <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" />Back to dashboard</Link>
           </Button>
         </div>
 
-        <Card className="rounded-2xl shadow-sm">
+        {/* Theme */}
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Palette className="h-4 w-4 text-muted-foreground" /> Theme</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Button variant={themePreset === "sand" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("sand")}>Sand</Button>
               <Button variant={themePreset === "ocean" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("ocean")}>Ocean</Button>
               <Button variant={themePreset === "sunset" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("sunset")}>Sunset</Button>
+              <Button variant={themePreset === "white" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("white")}>White</Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        {/* Account */}
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <CardHeader>
             <CardTitle>Account</CardTitle>
           </CardHeader>
@@ -280,7 +309,52 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        {/* Preferences */}
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle>Preferences</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label>Date format</Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={dateFormat === "dmy" ? "default" : "outline"}
+                  size="sm"
+                  className="h-9"
+                  onClick={() => applyDateFormat("dmy")}
+                >
+                  17 Apr 2026
+                </Button>
+                <Button
+                  variant={dateFormat === "mdy" ? "default" : "outline"}
+                  size="sm"
+                  className="h-9"
+                  onClick={() => applyDateFormat("mdy")}
+                >
+                  Apr 17, 2026
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Default view</Label>
+              <Select value={defaultView} onValueChange={applyDefaultView}>
+                <SelectTrigger className="h-10 w-full max-w-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="timeline">Timeline</SelectItem>
+                  <SelectItem value="table">Table</SelectItem>
+                  <SelectItem value="map">Map</SelectItem>
+                  <SelectItem value="insights">Insights</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Reset Password */}
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <CardHeader
             className="cursor-pointer select-none"
             onClick={() => {
@@ -338,6 +412,7 @@ export default function ProfilePage() {
           )}
         </Card>
 
+        {/* Delete Account */}
         <Card className="rounded-2xl border-red-200 shadow-sm">
           <CardHeader
             className="cursor-pointer select-none"

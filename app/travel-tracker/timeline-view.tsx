@@ -4,8 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/app/travel-tracker/empty-state";
+import { useDateFormat } from "@/app/travel-tracker/hooks/use-date-format";
 import type { TravelEntry, YearMonthGroup } from "@/app/travel-tracker/types";
-import { displayLocation, prettyDate } from "@/app/travel-tracker/utils";
+import { displayLocation, prettyDateWithFormat } from "@/app/travel-tracker/utils";
 
 interface TimelineViewProps {
   filteredEntries: TravelEntry[];
@@ -30,6 +31,7 @@ interface TimelineEntryCardProps {
   monthIndex: number;
   itemIndex: number;
   activeOptionsId: string | null;
+  dateFormat: "dmy" | "mdy";
   setActiveOptionsId: (id: string | null) => void;
   onEdit: (entry: TravelEntry) => void;
   onDelete: (id: string) => void;
@@ -41,10 +43,18 @@ function TimelineEntryCard({
   monthIndex,
   itemIndex,
   activeOptionsId,
+  dateFormat,
   setActiveOptionsId,
   onEdit,
   onDelete,
 }: TimelineEntryCardProps) {
+  const nights =
+    entry.endDate && entry.endDate !== entry.date
+      ? Math.round(
+          (new Date(entry.endDate).getTime() - new Date(entry.date).getTime()) /
+            (1000 * 60 * 60 * 24),
+        )
+      : 0;
   return (
     <Card
       className="timeline-entry-card relative rounded-[1.5rem] border border-white bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(248,250,252,0.95))] shadow-none transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_30px_rgba(15,23,42,0.1)]"
@@ -56,11 +66,11 @@ function TimelineEntryCard({
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-slate-800" variant="outline">
-                From {prettyDate(entry.date)}
+                From {prettyDateWithFormat(entry.date, dateFormat)}
               </Badge>
               {entry.endDate ? (
                 <Badge className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700" variant="outline">
-                  To {prettyDate(entry.endDate)}
+                  To {prettyDateWithFormat(entry.endDate, dateFormat)}
                 </Badge>
               ) : null}
               {entry.endDate && entry.endDate === entry.date ? (
@@ -68,6 +78,11 @@ function TimelineEntryCard({
                   Same-day trip
                 </Badge>
               ) : null}
+              {nights > 0 && (
+                <Badge className="rounded-full border-violet-200 bg-violet-50 px-3 py-1 text-violet-700" variant="outline">
+                  {nights} night{nights !== 1 ? "s" : ""}
+                </Badge>
+              )}
               {isCrossMonthTrip(entry) ? (
                 <Badge className="rounded-full border-blue-200 bg-blue-50 px-3 py-1 text-blue-700" variant="outline">
                   Cross-month trip
@@ -146,6 +161,7 @@ export function TimelineView({
 }: TimelineViewProps) {
   const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>({});
   const [activeOptionsId, setActiveOptionsId] = useState<string | null>(null);
+  const dateFormat = useDateFormat();
 
   useEffect(() => {
     setExpandedYears((prev) => {
@@ -220,9 +236,11 @@ export function TimelineView({
                   >
                     <div className="mb-3 flex items-center justify-between">
                       <h3 className="text-xl font-semibold tracking-[-0.03em] text-slate-950">{monthBlock.month}</h3>
-                      <Badge className="rounded-full bg-white px-3 py-1 text-slate-700 shadow-none" variant="secondary">
-                        {monthBlock.items.length} entr{monthBlock.items.length > 1 ? "ies" : "y"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className="rounded-full bg-white px-3 py-1 text-slate-700 shadow-none" variant="secondary">
+                          {monthBlock.items.length} entr{monthBlock.items.length > 1 ? "ies" : "y"}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="relative grid gap-3 md:pl-8">
                       <div className="timeline-rail pointer-events-none absolute bottom-2 left-2 top-2 hidden w-px bg-[linear-gradient(180deg,rgba(148,163,184,0),rgba(100,116,139,0.45),rgba(148,163,184,0))] md:block" />
@@ -234,6 +252,7 @@ export function TimelineView({
                           monthIndex={monthIndex}
                           itemIndex={itemIndex}
                           activeOptionsId={activeOptionsId}
+                          dateFormat={dateFormat}
                           setActiveOptionsId={setActiveOptionsId}
                           onEdit={onEdit}
                           onDelete={onDelete}

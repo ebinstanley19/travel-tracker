@@ -29,6 +29,16 @@ export function prettyDate(dateStr: string): string {
     : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+export function prettyDateWithFormat(dateStr: string, format: "dmy" | "mdy"): string {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  if (format === "mdy") {
+    return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+  }
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 export function prettyDateRange(startDate: string, endDate?: string): string {
   if (!startDate && !endDate) return "";
   if (!startDate) return prettyDate(endDate ?? "");
