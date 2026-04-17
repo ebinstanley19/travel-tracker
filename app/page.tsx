@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Download, LogOut, Palette, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
+import { ChevronDown, Download, HelpCircle, LogOut, Palette, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -188,6 +188,16 @@ export default function TravelHistoryTrackerApp() {
                     onClick={() => { setSettingsOpen(false); downloadImportTemplate(); }}
                   >
                     <Download className="mr-2 h-4 w-4" /> Download template
+                  </Button>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="h-11 w-full justify-start rounded-none px-3"
+                    onClick={() => setSettingsOpen(false)}
+                  >
+                    <Link href="/help">
+                      <HelpCircle className="mr-2 h-4 w-4" /> Help
+                    </Link>
                   </Button>
                   <Button
                     asChild
