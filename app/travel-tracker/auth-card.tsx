@@ -85,7 +85,7 @@ export function AuthCard({
             type="password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
-            placeholder="At least 6 characters"
+            placeholder="At least 8 characters"
             autoComplete={mode === "login" ? "current-password" : "new-password"}
             className="h-12 rounded-2xl border-slate-200/80 bg-white/80 px-4 shadow-none"
           />
