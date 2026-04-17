@@ -34,6 +34,13 @@ export default function TravelHistoryTrackerApp() {
 
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
 
+  const greeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  })();
+
   useEffect(() => {
     const storedTheme = typeof window !== "undefined" ? localStorage.getItem("routebook-theme") : null;
     if (storedTheme === "sand" || storedTheme === "ocean" || storedTheme === "sunset") {
@@ -98,10 +105,10 @@ export default function TravelHistoryTrackerApp() {
               </div>
               <div>
                 <h1 className="text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-5xl">
-                  Own your travel history in one beautiful timeline.
+                  Every border crossed. Every trip logged. All yours.
                 </h1>
                 <p className="mt-4 max-w-xl text-sm leading-7 text-white/78 md:text-base">
-                  Add trips and search your travel history instantly.
+                  A private archive for everywhere you've been.
                 </p>
               </div>
             </CardContent>
@@ -136,9 +143,11 @@ export default function TravelHistoryTrackerApp() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <img src={logoSrc} alt="Route Book logo" className="h-4 w-4 rounded-sm" /> Route Book
             </div>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight">Track every trip in one clean view</h1>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight">
+              {greeting}, {auth.user?.user_metadata?.full_name?.split(" ")[0] ?? auth.user?.email?.split("@")[0]}.
+            </h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              Built for passport-style travel history. Keep all your entry and exit dates in one place, searchable by country, year, and route.
+              Here's everything you've logged.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -157,6 +166,12 @@ export default function TravelHistoryTrackerApp() {
               </Button>
               {settingsOpen ? (
                 <div className="absolute right-0 z-30 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                  <div className="border-b border-slate-100 px-3 py-3">
+                    <p className="truncate text-sm font-semibold text-slate-800">
+                      {auth.user?.user_metadata?.full_name ?? auth.user?.email?.split("@")[0]}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">{auth.user?.email}</p>
+                  </div>
                   <div className="border-b border-slate-100 px-3 py-2">
                     <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                       <Palette className="h-3.5 w-3.5" /> Theme
@@ -204,6 +219,18 @@ export default function TravelHistoryTrackerApp() {
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (!file) return;
+              const validExts = [".xlsx", ".xls", ".csv"];
+              const hasValidExt = validExts.some((ext) => file.name.toLowerCase().endsWith(ext));
+              if (!hasValidExt) {
+                alert("Only .xlsx, .xls, and .csv files are supported.");
+                e.target.value = "";
+                return;
+              }
+              if (file.size > 10 * 1024 * 1024) {
+                alert("File is too large. Maximum size is 10 MB.");
+                e.target.value = "";
+                return;
+              }
               travelEntries.importEntries(file);
               e.target.value = "";
             }}

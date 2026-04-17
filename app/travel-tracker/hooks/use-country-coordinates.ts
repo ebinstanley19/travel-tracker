@@ -22,26 +22,40 @@ function saveCache(cache: Record<string, CachedPoint>): void {
   localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
 }
 
+async function fetchWithTimeout(url: string, timeoutMs = 5000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 async function resolveCountryPoint(country: string): Promise<CachedPoint | null> {
   const variants = [country, ...(MAP_SEARCH_ALIASES[country] ?? [])];
 
   for (const variant of variants) {
-    const fullTextResponse = await fetch(
-      `https://restcountries.com/v3.1/name/${encodeURIComponent(variant)}?fullText=true&fields=latlng`
-    );
-    if (fullTextResponse.ok) {
-      const payload = (await fullTextResponse.json()) as Array<{ latlng?: [number, number] }>;
-      const latlng = payload?.[0]?.latlng;
-      if (latlng && latlng.length === 2) return { lat: latlng[0], lng: latlng[1] };
-    }
+    try {
+      const fullTextResponse = await fetchWithTimeout(
+        `https://restcountries.com/v3.1/name/${encodeURIComponent(variant)}?fullText=true&fields=latlng`
+      );
+      if (fullTextResponse.ok) {
+        const payload = (await fullTextResponse.json()) as Array<{ latlng?: [number, number] }>;
+        const latlng = payload?.[0]?.latlng;
+        if (latlng && latlng.length === 2) return { lat: latlng[0], lng: latlng[1] };
+      }
 
-    const looseResponse = await fetch(
-      `https://restcountries.com/v3.1/name/${encodeURIComponent(variant)}?fields=latlng`
-    );
-    if (looseResponse.ok) {
-      const payload = (await looseResponse.json()) as Array<{ latlng?: [number, number] }>;
-      const latlng = payload?.[0]?.latlng;
-      if (latlng && latlng.length === 2) return { lat: latlng[0], lng: latlng[1] };
+      const looseResponse = await fetchWithTimeout(
+        `https://restcountries.com/v3.1/name/${encodeURIComponent(variant)}?fields=latlng`
+      );
+      if (looseResponse.ok) {
+        const payload = (await looseResponse.json()) as Array<{ latlng?: [number, number] }>;
+        const latlng = payload?.[0]?.latlng;
+        if (latlng && latlng.length === 2) return { lat: latlng[0], lng: latlng[1] };
+      }
+    } catch {
+      // Timeout or network error — try next variant
     }
   }
 

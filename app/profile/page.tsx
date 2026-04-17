@@ -143,8 +143,8 @@ export default function ProfilePage() {
     setErrorMessage("");
     setInfoMessage("");
 
-    if (newPassword.length < 6) {
-      setErrorMessage("New password must be at least 6 characters.");
+    if (newPassword.length < 8) {
+      setErrorMessage("New password must be at least 8 characters.");
       return;
     }
 
@@ -239,7 +239,6 @@ export default function ProfilePage() {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">Used as your default from-country and excluded from top-country rankings.</p>
           </div>
           <Button onClick={saveProfile} disabled={savingProfile}>
             <Save className="mr-2 h-4 w-4" />
@@ -282,7 +281,7 @@ export default function ProfilePage() {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters"
                   autoComplete="new-password"
                 />
               </div>

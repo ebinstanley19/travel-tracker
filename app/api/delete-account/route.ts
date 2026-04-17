@@ -39,7 +39,7 @@ export async function DELETE(request: Request) {
 
     if (dataError) {
       console.error("delete-account: travel_records delete failed:", dataError);
-      return Response.json({ error: `Failed to delete travel data: ${dataError.message}` }, { status: 500 });
+      return Response.json({ error: "Failed to delete account. Please try again or contact support." }, { status: 500 });
     }
 
     // Delete the auth account.
@@ -47,13 +47,12 @@ export async function DELETE(request: Request) {
 
     if (deleteError) {
       console.error("delete-account: auth.admin.deleteUser failed:", deleteError);
-      return Response.json({ error: `Failed to delete auth user: ${deleteError.message}` }, { status: 500 });
+      return Response.json({ error: "Failed to delete account. Please try again or contact support." }, { status: 500 });
     }
 
     return Response.json({ success: true });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("delete-account: unexpected error:", message);
-    return Response.json({ error: `Unexpected server error: ${message}` }, { status: 500 });
+    console.error("delete-account: unexpected error:", err);
+    return Response.json({ error: "An unexpected error occurred. Please try again or contact support." }, { status: 500 });
   }
 }
