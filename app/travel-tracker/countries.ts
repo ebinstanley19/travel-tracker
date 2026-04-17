@@ -232,6 +232,25 @@ const COUNTRY_ALIASES: Record<string, string> = {
   mo: "Macao",
 };
 
+// Maps canonical country name → search name variants for the restcountries.com API
+export const MAP_SEARCH_ALIASES: Record<string, string[]> = {
+  "United States": ["United States of America", "USA"],
+  "United Kingdom": ["UK", "Great Britain"],
+  "South Korea": ["Korea, Republic of", "Republic of Korea"],
+  "North Korea": ["Korea, Democratic People's Republic of"],
+  "Russia": ["Russian Federation"],
+  "Vietnam": ["Viet Nam"],
+  "Czechia": ["Czech Republic"],
+  "Türkiye": ["Turkey"],
+  "Iran": ["Iran, Islamic Republic of"],
+  "Syria": ["Syrian Arab Republic"],
+  "Laos": ["Lao People's Democratic Republic"],
+  "Moldova": ["Moldova, Republic of"],
+  "Bolivia": ["Bolivia, Plurinational State of"],
+  "Tanzania": ["Tanzania, United Republic of"],
+  "Venezuela": ["Venezuela, Bolivarian Republic of"],
+};
+
 const COUNTRY_LOOKUP = new Map(
   COUNTRY_OPTIONS.map((country) => [normalizeCountryKey(country), country] as const)
 );

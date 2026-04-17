@@ -3,7 +3,7 @@ import { ArrowUpDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { TravelEntry } from "@/app/travel-tracker/types";
-import { formatMonth, formatYear, prettyDate } from "@/app/travel-tracker/utils";
+import { displayLocation, formatMonth, formatYear, prettyDate } from "@/app/travel-tracker/utils";
 
 interface TableViewProps {
   entries: TravelEntry[];
@@ -13,14 +13,6 @@ interface TableViewProps {
 
 type SortDirection = "asc" | "desc";
 
-function displayLocation(value: string): string {
-  if (!value) return "-";
-  const [place, country] = value.split(" | ");
-  if (country) {
-    return `${place} (${country})`;
-  }
-  return value;
-}
 
 export function TableView({ entries, onDeleteSelected, deletingSelected = false }: TableViewProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

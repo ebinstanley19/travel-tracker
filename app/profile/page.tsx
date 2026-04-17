@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import { COUNTRY_OPTIONS } from "@/app/travel-tracker/countries";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -16,16 +18,11 @@ export default function ProfilePage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [homeCountry, setHomeCountry] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
-
-  useEffect(() => {
-    // Keep profile view in light mode.
-    document.documentElement.classList.remove("dark");
-    localStorage.setItem("travel-tracker-theme", "light");
-  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -49,6 +46,13 @@ export default function ProfilePage() {
     };
   }, []);
 
+  useEffect(() => {
+    const storedHomeCountry = localStorage.getItem("routebook-home-country");
+    if (storedHomeCountry) {
+      setHomeCountry(storedHomeCountry);
+    }
+  }, []);
+
   const userEmail = useMemo(() => user?.email ?? "", [user]);
 
   async function saveProfile(): Promise<void> {
@@ -67,6 +71,11 @@ export default function ProfilePage() {
     if (error) {
       setErrorMessage(error.message);
     } else {
+      if (homeCountry.trim()) {
+        localStorage.setItem("routebook-home-country", homeCountry.trim());
+      } else {
+        localStorage.removeItem("routebook-home-country");
+      }
       setInfoMessage("Profile updated successfully.");
     }
 
@@ -161,6 +170,21 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <Label>Full name</Label>
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
+            </div>
+            <div className="space-y-2">
+              <Label>Home country</Label>
+              <Select value={homeCountry || "none"} onValueChange={(value) => setHomeCountry(value === "none" ? "" : value)}>
+                <SelectTrigger className="h-10 w-full">
+                  <SelectValue placeholder="Select home country" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  <SelectItem value="none">None</SelectItem>
+                  {COUNTRY_OPTIONS.map((country) => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Used as your default from-country and excluded from top-country rankings.</p>
             </div>
             <Button onClick={saveProfile} disabled={savingProfile}>
               <Save className="mr-2 h-4 w-4" />

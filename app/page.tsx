@@ -1,135 +1,37 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Download, LogOut, Palette, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
-import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AuthCard, type AuthMode } from "@/app/travel-tracker/auth-card";
+import { AuthCard } from "@/app/travel-tracker/auth-card";
 import { EntryDialog } from "@/app/travel-tracker/entry-dialog";
-import { normalizeCountryName } from "@/app/travel-tracker/countries";
 import { FiltersCard } from "@/app/travel-tracker/filters-card";
 import { MapView } from "@/app/travel-tracker/map-view";
 import { StatsCards } from "@/app/travel-tracker/stats-cards";
 import { TableView } from "@/app/travel-tracker/table-view";
 import { TimelineView } from "@/app/travel-tracker/timeline-view";
 import { LOGO_VARIANT } from "@/app/travel-tracker/brand-config";
-import type { TravelEntry, TravelForm, YearMonthGroup } from "@/app/travel-tracker/types";
-import { downloadImportTemplate, exportToExcel, formatMonth, formatYear, monthOrder, parseWorkbook, sortEntries } from "@/app/travel-tracker/utils";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/app/travel-tracker/hooks/use-auth";
+import { useFilters } from "@/app/travel-tracker/hooks/use-filters";
+import { useTravelEntries } from "@/app/travel-tracker/hooks/use-travel-entries";
+import { downloadImportTemplate, exportToExcel } from "@/app/travel-tracker/utils";
 
-const sampleData: TravelEntry[] = [];
-const LOCATION_SEPARATOR = " | ";
 type ThemePreset = "sand" | "ocean" | "sunset";
 
-const emptyForm: TravelForm = {
-  date: "",
-  endDate: "",
-  from: "",
-  fromCountry: "",
-  to: "",
-  toCountry: "",
-  purpose: "",
-  notes: "",
-};
-
-interface TravelRecordRow {
-  id: string;
-  date?: string | null;
-  end_date?: string | null;
-  from?: string | null;
-  to?: string | null;
-  country?: string | null;
-  purpose?: string | null;
-  notes?: string | null;
-}
-
-function normalizeStoredLocation(value: string): string {
-  if (!value) return "";
-
-  const parts = value.split(LOCATION_SEPARATOR);
-  if (parts.length < 2) {
-    return normalizeCountryName(value);
-  }
-
-  const place = parts[0]?.trim() ?? "";
-  const country = normalizeCountryName(parts.slice(1).join(LOCATION_SEPARATOR).trim());
-  return country ? `${place}${LOCATION_SEPARATOR}${country}` : place;
-}
-
-function normalizeRecord(item: TravelRecordRow): TravelEntry {
-  return {
-    id: item.id,
-    date: item.date ?? "",
-    endDate: item.end_date ?? "",
-    from: normalizeStoredLocation(item.from ?? ""),
-    to: normalizeStoredLocation(item.to ?? ""),
-    country: normalizeCountryName(item.country ?? ""),
-    purpose: item.purpose ?? "",
-    notes: item.notes ?? "",
-  };
-}
-
-function isMissingEndDateColumn(errorMessage: string): boolean {
-  return /end_date/i.test(errorMessage);
-}
-
-function normalizeDateRange(start: string, end: string): { startDate: string; endDate: string } {
-  const startDate = start || end;
-  const endDate = end || start;
-
-  if (!startDate || !endDate) {
-    return { startDate, endDate };
-  }
-
-  const startTime = new Date(startDate).getTime();
-  const endTime = new Date(endDate).getTime();
-
-  if (Number.isNaN(startTime) || Number.isNaN(endTime) || startTime <= endTime) {
-    return { startDate, endDate };
-  }
-
-  return { startDate: endDate, endDate: startDate };
-}
-
-function splitLocation(value: string): { place: string; country: string } {
-  if (!value) return { place: "", country: "" };
-
-  const parts = value.split(LOCATION_SEPARATOR);
-  if (parts.length < 2) {
-    return { place: value, country: "" };
-  }
-
-  return {
-    place: parts[0]?.trim() ?? "",
-    country: parts[1]?.trim() ?? "",
-  };
-}
-
 export default function TravelHistoryTrackerApp() {
-  const [entries, setEntries] = useState<TravelEntry[]>(sampleData);
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [authPending, setAuthPending] = useState(false);
-  const [authMode, setAuthMode] = useState<AuthMode>("login");
-  const [authFullName, setAuthFullName] = useState("");
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [authInfo, setAuthInfo] = useState("");
-  const [search, setSearch] = useState("");
-  const [countryFilter, setCountryFilter] = useState("all");
-  const [yearFilter, setYearFilter] = useState("all");
-  const [open, setOpen] = useState(false);
-  const [deletingSelected, setDeletingSelected] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const auth = useAuth();
+  const [homeCountry, setHomeCountry] = useState("");
+  const travelEntries = useTravelEntries({ user: auth.user, homeCountry });
+  const filters = useFilters({ entries: travelEntries.entries, homeCountry });
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [themePreset, setThemePreset] = useState<ThemePreset>("sand");
-  const [form, setForm] = useState<TravelForm>(emptyForm);
+
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
 
   useEffect(() => {
@@ -139,8 +41,14 @@ export default function TravelHistoryTrackerApp() {
       document.documentElement.setAttribute("data-theme", storedTheme);
       return;
     }
-
     document.documentElement.setAttribute("data-theme", "sand");
+  }, []);
+
+  useEffect(() => {
+    const storedHomeCountry = typeof window !== "undefined" ? localStorage.getItem("routebook-home-country") : null;
+    if (storedHomeCountry) {
+      setHomeCountry(storedHomeCountry);
+    }
   }, []);
 
   useEffect(() => {
@@ -149,7 +57,6 @@ export default function TravelHistoryTrackerApp() {
         setSettingsOpen(false);
       }
     }
-
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
@@ -160,395 +67,11 @@ export default function TravelHistoryTrackerApp() {
     localStorage.setItem("routebook-theme", nextTheme);
   }
 
-  useEffect(() => {
-    async function loadRecords(userId: string) {
-      const { data, error } = await supabase
-        .from("travel_records")
-        .select("*")
-        .eq("user_id", userId)
-        .order("date", { ascending: false });
-
-      if (!error && data) {
-        setEntries((data as TravelRecordRow[]).map(normalizeRecord));
-      }
-    }
-
-    let isMounted = true;
-
-    async function bootstrapAuth() {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (!isMounted) return;
-
-        if (error) {
-          console.error("Auth bootstrap failed:", error.message);
-          setUser(null);
-          setEntries([]);
-          return;
-        }
-
-        const sessionUser = session?.user ?? null;
-        setUser(sessionUser);
-
-        if (sessionUser) {
-          await loadRecords(sessionUser.id);
-        } else {
-          setEntries([]);
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error("Unexpected auth bootstrap error:", error);
-          setUser(null);
-          setEntries([]);
-        }
-      } finally {
-        if (isMounted) {
-          setAuthLoading(false);
-        }
-      }
-    }
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!isMounted) return;
-
-      const sessionUser = session?.user ?? null;
-      setUser(sessionUser);
-
-      if (sessionUser) {
-        await loadRecords(sessionUser.id);
-      } else {
-        setEntries([]);
-      }
-
-      setAuthLoading(false);
-    });
-
-    void bootstrapAuth();
-
-    return () => {
-      isMounted = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  const countries = useMemo(() => {
-    return [...new Set(entries.map((entry) => entry.country).filter(Boolean))].sort();
-  }, [entries]);
-
-  const years = useMemo(() => {
-    return [...new Set(entries.map((entry) => formatYear(entry.date || entry.endDate)).filter(Boolean))].sort((a, b) => Number(b) - Number(a));
-  }, [entries]);
-
-  const filtered = useMemo(() => {
-    return sortEntries(
-      entries.filter((entry) => {
-        const blob = `${entry.date} ${entry.endDate} ${entry.from} ${entry.to} ${entry.country} ${entry.purpose} ${entry.notes}`.toLowerCase();
-        const matchesSearch = blob.includes(search.toLowerCase());
-        const matchesCountry = countryFilter === "all" || entry.country === countryFilter;
-        const matchesYear = yearFilter === "all" || formatYear(entry.date || entry.endDate) === yearFilter;
-        return matchesSearch && matchesCountry && matchesYear;
-      })
-    );
-  }, [entries, search, countryFilter, yearFilter]);
-
-  const groupedByYearMonth = useMemo<YearMonthGroup[]>(() => {
-    const grouped: Record<string, Record<string, TravelEntry[]>> = {};
-    filtered.forEach((entry) => {
-      const anchorDate = entry.date || entry.endDate;
-      const year = formatYear(anchorDate) || "Unknown Year";
-      const month = formatMonth(anchorDate) || "Unknown Month";
-      grouped[year] ??= {};
-      grouped[year][month] ??= [];
-      grouped[year][month].push(entry);
-    });
-
-    const orderedYears = Object.keys(grouped).sort((a, b) => {
-      if (a === "Unknown Year") return 1;
-      if (b === "Unknown Year") return -1;
-      return Number(b) - Number(a);
-    });
-
-    return orderedYears.map((year) => ({
-      year,
-      months: [...monthOrder]
-        .reverse()
-        .filter((month) => grouped[year][month])
-        .map((month) => ({ month, items: sortEntries(grouped[year][month]) })),
-    }));
-  }, [filtered]);
-
-  const stats = useMemo(() => {
-    const uniqueCountries = new Set(entries.map((entry) => entry.country).filter(Boolean)).size;
-    const totalTrips = entries.length;
-    const yearsCovered = new Set(entries.map((entry) => formatYear(entry.date || entry.endDate)).filter(Boolean)).size;
-
-    const countryCounts = entries.reduce<Record<string, number>>((acc, item) => {
-      if (!item.country) return acc;
-      acc[item.country] = (acc[item.country] || 0) + 1;
-      return acc;
-    }, {});
-
-    const topCountryEntry = Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0];
-    const topCountry = topCountryEntry?.[0] || "-";
-    const topCountryVisits = topCountryEntry?.[1] || 0;
-    return { uniqueCountries, totalTrips, yearsCovered, topCountry, topCountryVisits };
-  }, [entries]);
-
-  async function handleAuthSubmit(): Promise<void> {
-    setAuthError("");
-    setAuthInfo("");
-
-    if (!authEmail || !authPassword) {
-      setAuthError("Email and password are required.");
-      return;
-    }
-
-    if (authMode === "signup" && !authFullName.trim()) {
-      setAuthError("Full name is required for account creation.");
-      return;
-    }
-
-    setAuthPending(true);
-
-    if (authMode === "signup") {
-      const { error } = await supabase.auth.signUp({
-        email: authEmail,
-        password: authPassword,
-        options: {
-          data: {
-            full_name: authFullName.trim(),
-          },
-        },
-      });
-
-      if (error) {
-        setAuthError(error.message);
-      } else {
-        setAuthInfo("Account created. Check your email to confirm before logging in.");
-      }
-    }
-
-    if (authMode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: authEmail,
-        password: authPassword,
-      });
-
-      if (error) {
-        setAuthError(error.message);
-      }
-    }
-
-    setAuthPending(false);
-  }
-
-  async function handleForgotPassword(): Promise<void> {
-    setAuthError("");
-    setAuthInfo("");
-
-    if (!authEmail) {
-      setAuthError("Enter your email first, then click Forgot password.");
-      return;
-    }
-
-    setAuthPending(true);
-
-    const { error } = await supabase.auth.resetPasswordForEmail(authEmail, {
-      redirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
-    });
-
-    if (error) {
-      setAuthError(error.message);
-    } else {
-      setAuthInfo("Password reset email sent. Check your inbox and spam folder.");
-    }
-
-    setAuthPending(false);
-  }
-
-  async function handleSignOut(): Promise<void> {
-    setAuthError("");
-    setAuthInfo("");
-    setAuthPending(true);
-
-    // Ensure UI exits authenticated state immediately even if remote revoke fails.
-    setUser(null);
-    setEntries([]);
-    setOpen(false);
-    setEditingId(null);
-
-    const { error } = await supabase.auth.signOut({ scope: "local" });
-    if (error) {
-      setAuthError(`Signed out locally, but Supabase returned: ${error.message}`);
-    }
-
-    setAuthPending(false);
-  }
-
-  function openNewModal() {
-    setEditingId(null);
-    setForm(emptyForm);
-    setOpen(true);
-  }
-
-  function openEditModal(entry: TravelEntry): void {
-    const fromLocation = splitLocation(entry.from || "");
-    const toLocation = splitLocation(entry.to || "");
-
-    setEditingId(entry.id);
-    setForm({
-      date: entry.date || "",
-      endDate: entry.endDate || entry.date || "",
-      from: fromLocation.country ? fromLocation.place : "",
-      fromCountry: fromLocation.country || fromLocation.place || "",
-      to: toLocation.country ? toLocation.place : "",
-      toCountry: toLocation.country || toLocation.place || entry.country || "",
-      purpose: entry.purpose || "",
-      notes: entry.notes || "",
-    });
-    setOpen(true);
-  }
-
-  async function saveEntry(): Promise<void> {
-    if (!user) return;
-    if (!form.date && !form.endDate && !form.fromCountry && !form.toCountry) return;
-
-    const { startDate, endDate } = normalizeDateRange(form.date, form.endDate);
-
-    const fromLocation = form.fromCountry.trim();
-    const toLocation = form.toCountry.trim();
-    const destinationCountry = form.toCountry || form.fromCountry || "";
-
-    if (editingId) {
-      let { data, error } = await supabase
-        .from("travel_records")
-        .update({
-          date: startDate,
-          end_date: endDate || null,
-          from: fromLocation,
-          to: toLocation,
-          country: destinationCountry,
-          purpose: form.purpose || "",
-          notes: form.notes || "",
-        })
-        .eq("id", editingId)
-        .eq("user_id", user.id)
-        .select()
-        .single();
-
-      if (error?.message && isMissingEndDateColumn(error.message)) {
-        console.warn("travel_records.end_date column not found; falling back to single date storage.");
-        const retry = await supabase
-          .from("travel_records")
-          .update({
-            date: startDate,
-            from: fromLocation,
-            to: toLocation,
-            country: destinationCountry,
-            purpose: form.purpose || "",
-            notes: form.notes || "",
-          })
-          .eq("id", editingId)
-          .eq("user_id", user.id)
-          .select()
-          .single();
-
-        data = retry.data;
-        error = retry.error;
-      }
-
-      if (!error && data) {
-        const updated = normalizeRecord(data as TravelRecordRow);
-        setEntries((prev) => prev.map((entry) => (entry.id === editingId ? updated : entry)));
-      }
-    } else {
-      let { data, error } = await supabase
-        .from("travel_records")
-        .insert([
-          {
-            date: startDate,
-            end_date: endDate || null,
-            from: fromLocation,
-            to: toLocation,
-            country: destinationCountry,
-            purpose: form.purpose || "",
-            notes: form.notes || "",
-            user_id: user.id,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error?.message && isMissingEndDateColumn(error.message)) {
-        console.warn("travel_records.end_date column not found; falling back to single date storage.");
-        const retry = await supabase
-          .from("travel_records")
-          .insert([
-            {
-              date: startDate,
-              from: fromLocation,
-              to: toLocation,
-              country: destinationCountry,
-              purpose: form.purpose || "",
-              notes: form.notes || "",
-              user_id: user.id,
-            },
-          ])
-          .select()
-          .single();
-
-        data = retry.data;
-        error = retry.error;
-      }
-
-      if (!error && data) {
-        const created = normalizeRecord(data as TravelRecordRow);
-        setEntries((prev) => sortEntries([created, ...prev]));
-      }
-    }
-
-    setOpen(false);
-  }
-
-  async function deleteEntry(id: string): Promise<void> {
-    if (!user) return;
-    const { error } = await supabase
-      .from("travel_records")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", user.id);
-
-    if (!error) {
-      setEntries((prev) => prev.filter((entry) => entry.id !== id));
-    }
-  }
-
-  async function deleteSelectedEntries(ids: string[]): Promise<void> {
-    if (!user || ids.length === 0) return;
-
-    setDeletingSelected(true);
-    const { error } = await supabase
-      .from("travel_records")
-      .delete()
-      .in("id", ids)
-      .eq("user_id", user.id);
-
-    if (!error) {
-      setEntries((prev) => prev.filter((entry) => !ids.includes(entry.id)));
-    }
-
-    setDeletingSelected(false);
-  }
-
   function triggerImport(): void {
     fileInputRef.current?.click();
   }
 
-  if (authLoading) {
+  if (auth.authLoading || (!!auth.user && travelEntries.entriesLoading)) {
     return (
       <div className="min-h-screen bg-slate-50 p-4 md:p-8">
         <div className="mx-auto max-w-7xl">
@@ -562,7 +85,7 @@ export default function TravelHistoryTrackerApp() {
     );
   }
 
-  if (!user) {
+  if (!auth.user) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-slate-50 p-4 md:p-8">
         <div className="pointer-events-none absolute -left-24 -top-16 h-72 w-72 rounded-full bg-amber-200/45 blur-3xl" />
@@ -585,19 +108,19 @@ export default function TravelHistoryTrackerApp() {
           </Card>
           <div className="flex items-center justify-center">
             <AuthCard
-              mode={authMode}
-              fullName={authFullName}
-              email={authEmail}
-              password={authPassword}
-              pending={authPending}
-              errorMessage={authError}
-              infoMessage={authInfo}
-              onModeChange={setAuthMode}
-              onFullNameChange={setAuthFullName}
-              onEmailChange={setAuthEmail}
-              onPasswordChange={setAuthPassword}
-              onForgotPassword={handleForgotPassword}
-              onSubmit={handleAuthSubmit}
+              mode={auth.authMode}
+              fullName={auth.authFullName}
+              email={auth.authEmail}
+              password={auth.authPassword}
+              pending={auth.authPending}
+              errorMessage={auth.authError}
+              infoMessage={auth.authInfo}
+              onModeChange={auth.setAuthMode}
+              onFullNameChange={auth.setAuthFullName}
+              onEmailChange={auth.setAuthEmail}
+              onPasswordChange={auth.setAuthPassword}
+              onForgotPassword={auth.handleForgotPassword}
+              onSubmit={auth.handleAuthSubmit}
             />
           </div>
         </div>
@@ -619,10 +142,10 @@ export default function TravelHistoryTrackerApp() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button onClick={openNewModal}>
+            <Button onClick={travelEntries.openNewModal}>
               <Plus className="mr-2 h-4 w-4" /> Add entry
             </Button>
-            <Button variant="outline" onClick={() => exportToExcel(entries)}>
+            <Button variant="outline" onClick={() => exportToExcel(travelEntries.entries)}>
               <Download className="mr-2 h-4 w-4" /> Export Excel
             </Button>
             <Button variant="outline" onClick={triggerImport}>
@@ -647,10 +170,7 @@ export default function TravelHistoryTrackerApp() {
                   <Button
                     variant="ghost"
                     className="h-11 w-full justify-start rounded-none px-3"
-                    onClick={() => {
-                      setSettingsOpen(false);
-                      downloadImportTemplate();
-                    }}
+                    onClick={() => { setSettingsOpen(false); downloadImportTemplate(); }}
                   >
                     <Download className="mr-2 h-4 w-4" /> Download template
                   </Button>
@@ -667,13 +187,10 @@ export default function TravelHistoryTrackerApp() {
                   <Button
                     variant="ghost"
                     className="h-11 w-full justify-start rounded-none px-3 text-red-600 hover:text-red-700"
-                    onClick={() => {
-                      setSettingsOpen(false);
-                      void handleSignOut();
-                    }}
-                    disabled={authPending}
+                    onClick={() => { setSettingsOpen(false); void auth.handleSignOut(); }}
+                    disabled={auth.authPending}
                   >
-                    <LogOut className="mr-2 h-4 w-4" /> {authPending ? "Logging out..." : "Log out"}
+                    <LogOut className="mr-2 h-4 w-4" /> {auth.authPending ? "Logging out..." : "Log out"}
                   </Button>
                 </div>
               ) : null}
@@ -684,77 +201,32 @@ export default function TravelHistoryTrackerApp() {
             type="file"
             accept=".xlsx,.xls,.csv"
             className="hidden"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            onChange={(e) => {
               const file = e.target.files?.[0];
               if (!file) return;
-              if (!user) return;
-
-              parseWorkbook(file, async (parsed: TravelEntry[]) => {
-                const payload = parsed.map((item) => ({
-                  date: item.date,
-                  end_date: item.endDate || null,
-                  from: item.from,
-                  to: item.to,
-                  country: item.country,
-                  purpose: item.purpose,
-                  notes: item.notes,
-                  user_id: user.id,
-                }));
-
-                let { data, error } = await supabase
-                  .from("travel_records")
-                  .insert(payload)
-                  .select();
-
-                if (error?.message && isMissingEndDateColumn(error.message)) {
-                  console.warn("travel_records.end_date column not found; falling back to single date storage for imports.");
-                  const fallbackPayload = parsed.map((item) => ({
-                    date: item.date,
-                    from: item.from,
-                    to: item.to,
-                    country: item.country,
-                    purpose: item.purpose,
-                    notes: item.notes,
-                    user_id: user.id,
-                  }));
-
-                  const retry = await supabase
-                    .from("travel_records")
-                    .insert(fallbackPayload)
-                    .select();
-
-                  data = retry.data;
-                  error = retry.error;
-                }
-
-                if (!error && data) {
-                  const normalized = (data as TravelRecordRow[]).map(normalizeRecord);
-                  setEntries((prev) => sortEntries([...normalized, ...prev]));
-                } else {
-                  console.error("Import failed:", error);
-                }
-              });
+              travelEntries.importEntries(file);
+              e.target.value = "";
             }}
           />
         </div>
 
         <StatsCards
-          totalTrips={stats.totalTrips}
-          uniqueCountries={stats.uniqueCountries}
-          yearsCovered={stats.yearsCovered}
-          topCountry={stats.topCountry}
-          topCountryVisits={stats.topCountryVisits}
+          totalTrips={filters.stats.totalTrips}
+          uniqueCountries={filters.stats.uniqueCountries}
+          yearsCovered={filters.stats.yearsCovered}
+          topCountry={filters.stats.topCountry}
+          topCountryVisits={filters.stats.topCountryVisits}
         />
 
         <FiltersCard
-          search={search}
-          countryFilter={countryFilter}
-          yearFilter={yearFilter}
-          countries={countries}
-          years={years}
-          onSearchChange={setSearch}
-          onCountryChange={setCountryFilter}
-          onYearChange={setYearFilter}
+          search={filters.search}
+          countryFilter={filters.countryFilter}
+          yearFilter={filters.yearFilter}
+          countries={filters.countries}
+          years={filters.years}
+          onSearchChange={filters.setSearch}
+          onCountryChange={filters.setCountryFilter}
+          onYearChange={filters.setYearFilter}
         />
 
         <Tabs defaultValue="timeline" className="space-y-4">
@@ -766,35 +238,47 @@ export default function TravelHistoryTrackerApp() {
 
           <TabsContent value="timeline">
             <TimelineView
-              filteredEntries={filtered}
-              groupedByYearMonth={groupedByYearMonth}
-              onAdd={openNewModal}
+              filteredEntries={filters.filtered}
+              groupedByYearMonth={filters.groupedByYearMonth}
+              onAdd={travelEntries.openNewModal}
               onImport={triggerImport}
-              onEdit={openEditModal}
-              onDelete={deleteEntry}
+              onEdit={travelEntries.openEditModal}
+              onDelete={travelEntries.deleteEntry}
             />
           </TabsContent>
 
           <TabsContent value="table">
-            <TableView entries={filtered} onDeleteSelected={deleteSelectedEntries} deletingSelected={deletingSelected} />
+            <TableView
+              entries={filters.filtered}
+              onDeleteSelected={travelEntries.deleteSelectedEntries}
+              deletingSelected={travelEntries.deletingSelected}
+            />
           </TabsContent>
 
           <TabsContent value="map">
-            <MapView entries={filtered} selectedCountry={countryFilter} onCountrySelect={setCountryFilter} />
+            <MapView
+              entries={filters.filtered}
+              selectedCountry={filters.countryFilter}
+              homeCountry={homeCountry}
+              onCountrySelect={filters.setCountryFilter}
+            />
           </TabsContent>
         </Tabs>
 
         <EntryDialog
-          open={open}
-          editingId={editingId}
-          form={form}
-          onOpenChange={setOpen}
-          onFormChange={setForm}
-          onSave={saveEntry}
+          open={travelEntries.open}
+          editingId={travelEntries.editingId}
+          form={travelEntries.form}
+          onOpenChange={travelEntries.setOpen}
+          onFormChange={travelEntries.setForm}
+          onSave={travelEntries.saveEntry}
         />
       </div>
 
-      <Button className="fixed bottom-5 right-5 h-12 rounded-full px-5 shadow-xl md:hidden" onClick={openNewModal}>
+      <Button
+        className="fixed bottom-5 right-5 h-12 rounded-full px-5 shadow-xl md:hidden"
+        onClick={travelEntries.openNewModal}
+      >
         <Plus className="mr-2 h-4 w-4" /> Quick add
       </Button>
     </div>
