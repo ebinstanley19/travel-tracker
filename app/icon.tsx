@@ -18,9 +18,20 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(145deg, #0f2a4a 0%, #1a4f86 55%, #4e8fcd 100%)",
+          background: "transparent",
         }}
       >
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "linear-gradient(145deg, #0f2a4a 0%, #1a4f86 55%, #4e8fcd 100%)",
+            borderRadius: "50%",
+          }}
+        >
         <svg viewBox="0 0 512 512" width="420" height="420" fill="none" xmlns="http://www.w3.org/2000/svg">
           {LOGO_VARIANT === "orbit" ? (
             <g>
@@ -71,6 +82,7 @@ export default function Icon() {
             </g>
           ) : null}
         </svg>
+        </div>
       </div>
     ),
     {
