@@ -15,19 +15,21 @@ import { TimelineView } from "@/app/travel-tracker/timeline-view";
 import { LOGO_VARIANT } from "@/app/travel-tracker/brand-config";
 import { useAuth } from "@/app/travel-tracker/hooks/use-auth";
 import { useFilters } from "@/app/travel-tracker/hooks/use-filters";
+import { usePreferences } from "@/app/travel-tracker/hooks/use-preferences";
 import { useTravelEntries } from "@/app/travel-tracker/hooks/use-travel-entries";
 import { downloadImportTemplate, exportToExcel } from "@/app/travel-tracker/utils";
 
 export default function TravelHistoryTrackerApp() {
   const auth = useAuth();
+  const { prefs } = usePreferences(auth.user);
   const [homeCountry, setHomeCountry] = useState("");
+  const [defaultView, setDefaultView] = useState("timeline");
   const travelEntries = useTravelEntries({ user: auth.user, homeCountry });
   const filters = useFilters({ entries: travelEntries.entries, homeCountry });
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [defaultView, setDefaultView] = useState("timeline");
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
 
   const greeting = (() => {
@@ -47,18 +49,12 @@ export default function TravelHistoryTrackerApp() {
   }, []);
 
   useEffect(() => {
-    const storedHomeCountry = typeof window !== "undefined" ? localStorage.getItem("routebook-home-country") : null;
-    if (storedHomeCountry) {
-      setHomeCountry(storedHomeCountry);
-    }
-  }, []);
+    setHomeCountry(prefs.homeCountry);
+  }, [prefs.homeCountry]);
 
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("routebook-default-view") : null;
-    if (stored === "table" || stored === "map" || stored === "insights") {
-      setDefaultView(stored);
-    }
-  }, []);
+    setDefaultView(prefs.defaultView);
+  }, [prefs.defaultView]);
 
   useEffect(() => {
     function onPointerDown(event: MouseEvent) {

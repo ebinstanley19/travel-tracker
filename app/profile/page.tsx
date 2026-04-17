@@ -12,8 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { COUNTRY_OPTIONS } from "@/app/travel-tracker/countries";
-
-type ThemePreset = "sand" | "ocean" | "sunset" | "white";
+import { usePreferences } from "@/app/travel-tracker/hooks/use-preferences";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -23,9 +22,6 @@ export default function ProfilePage() {
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [homeCountry, setHomeCountry] = useState("");
-  const [themePreset, setThemePreset] = useState<ThemePreset>("sand");
-  const [dateFormat, setDateFormat] = useState<"dmy" | "mdy">("dmy");
-  const [defaultView, setDefaultView] = useState("timeline");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -59,47 +55,11 @@ export default function ProfilePage() {
     };
   }, []);
 
-  useEffect(() => {
-    const storedHomeCountry = localStorage.getItem("routebook-home-country");
-    if (storedHomeCountry) {
-      setHomeCountry(storedHomeCountry);
-    }
-  }, []);
+  const { prefs, savePreferences } = usePreferences(user);
 
   useEffect(() => {
-    const stored = localStorage.getItem("routebook-theme");
-    if (stored === "sand" || stored === "ocean" || stored === "sunset" || stored === "white") {
-      setThemePreset(stored);
-    }
-  }, []);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("routebook-date-format");
-    if (stored === "mdy") setDateFormat("mdy");
-  }, []);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("routebook-default-view");
-    if (stored === "table" || stored === "map" || stored === "insights") {
-      setDefaultView(stored);
-    }
-  }, []);
-
-  function applyTheme(next: ThemePreset): void {
-    setThemePreset(next);
-    localStorage.setItem("routebook-theme", next);
-    document.documentElement.setAttribute("data-theme", next);
-  }
-
-  function applyDateFormat(fmt: "dmy" | "mdy"): void {
-    setDateFormat(fmt);
-    localStorage.setItem("routebook-date-format", fmt);
-  }
-
-  function applyDefaultView(view: string): void {
-    setDefaultView(view);
-    localStorage.setItem("routebook-default-view", view);
-  }
+    setHomeCountry(prefs.homeCountry);
+  }, [prefs.homeCountry]);
 
   const userEmail = useMemo(() => user?.email ?? "", [user]);
 
@@ -119,11 +79,7 @@ export default function ProfilePage() {
     if (error) {
       setErrorMessage(error.message);
     } else {
-      if (homeCountry.trim()) {
-        localStorage.setItem("routebook-home-country", homeCountry.trim());
-      } else {
-        localStorage.removeItem("routebook-home-country");
-      }
+      await savePreferences({ homeCountry: homeCountry.trim() });
       setInfoMessage("Profile updated successfully.");
     }
 
@@ -266,10 +222,10 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <Button variant={themePreset === "sand" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("sand")}>Sand</Button>
-              <Button variant={themePreset === "ocean" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("ocean")}>Ocean</Button>
-              <Button variant={themePreset === "sunset" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("sunset")}>Sunset</Button>
-              <Button variant={themePreset === "white" ? "default" : "outline"} size="sm" className="h-9" onClick={() => applyTheme("white")}>White</Button>
+              <Button variant={prefs.theme === "sand" ? "default" : "outline"} size="sm" className="h-9" onClick={() => void savePreferences({ theme: "sand" })}>Sand</Button>
+              <Button variant={prefs.theme === "ocean" ? "default" : "outline"} size="sm" className="h-9" onClick={() => void savePreferences({ theme: "ocean" })}>Ocean</Button>
+              <Button variant={prefs.theme === "sunset" ? "default" : "outline"} size="sm" className="h-9" onClick={() => void savePreferences({ theme: "sunset" })}>Sunset</Button>
+              <Button variant={prefs.theme === "white" ? "default" : "outline"} size="sm" className="h-9" onClick={() => void savePreferences({ theme: "white" })}>White</Button>
             </div>
           </CardContent>
         </Card>
@@ -319,18 +275,18 @@ export default function ProfilePage() {
               <Label>Date format</Label>
               <div className="flex gap-2">
                 <Button
-                  variant={dateFormat === "dmy" ? "default" : "outline"}
+                  variant={prefs.dateFormat === "dmy" ? "default" : "outline"}
                   size="sm"
                   className="h-9"
-                  onClick={() => applyDateFormat("dmy")}
+                  onClick={() => void savePreferences({ dateFormat: "dmy" })}
                 >
                   17 Apr 2026
                 </Button>
                 <Button
-                  variant={dateFormat === "mdy" ? "default" : "outline"}
+                  variant={prefs.dateFormat === "mdy" ? "default" : "outline"}
                   size="sm"
                   className="h-9"
-                  onClick={() => applyDateFormat("mdy")}
+                  onClick={() => void savePreferences({ dateFormat: "mdy" })}
                 >
                   Apr 17, 2026
                 </Button>
@@ -338,7 +294,7 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-2">
               <Label>Default view</Label>
-              <Select value={defaultView} onValueChange={applyDefaultView}>
+              <Select value={prefs.defaultView} onValueChange={(v) => void savePreferences({ defaultView: v })}>
                 <SelectTrigger className="h-10 w-full max-w-xs">
                   <SelectValue />
                 </SelectTrigger>
