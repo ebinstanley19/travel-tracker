@@ -4,6 +4,10 @@ A private travel history tracker. Log every trip you've taken and explore your h
 
 **[Live app →](https://travel-tracker-tan.vercel.app)**
 
+If this app is useful to you, consider supporting it — any amount helps.
+
+[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-0070ba?logo=paypal&logoColor=white)](https://www.paypal.me/ebinstanley19)
+
 ---
 
 ## Features
@@ -39,14 +43,6 @@ A private travel history tracker. Log every trip you've taken and explore your h
 ## Self-hosting
 
 See [docs/deployment.md](docs/deployment.md) for full setup instructions covering Supabase, local development, and Vercel deployment.
-
----
-
-## Support
-
-If this app is useful to you, you can buy me a coffee via PayPal — any amount is appreciated.
-
-[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-0070ba?logo=paypal&logoColor=white)](https://www.paypal.com/donate?business=ebinstnly%40gmail.com&currency_code=USD)
 
 ---
 
