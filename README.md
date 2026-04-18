@@ -2,7 +2,7 @@
 
 A private travel history tracker. Log every trip you've taken and explore your history across a timeline, table, and interactive map.
 
-**[Live app →](https://travel-tracker-tan.vercel.app)**
+> This is a self-hosted app — there is no hosted version. You deploy your own instance and your data stays yours. See [Deploy your own](#self-hosting) to get started.
 
 If this app is useful to you, consider supporting it — any amount helps.
 
@@ -43,6 +43,8 @@ If this app is useful to you, consider supporting it — any amount helps.
 ## Self-hosting
 
 See [docs/deployment.md](docs/deployment.md) for full setup instructions covering Supabase, local development, and Vercel deployment.
+
+Prefer not to self-host? You can request access to the hosted version by emailing [ebinstnly@gmail.com](mailto:ebinstnly@gmail.com).
 
 ---
 
