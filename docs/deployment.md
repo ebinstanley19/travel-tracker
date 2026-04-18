@@ -76,7 +76,23 @@ Go to **Settings → API**:
 
 ---
 
-## 2. Local Development
+## 2. Mailjet Setup (monthly backup emails)
+
+1. Sign up at [mailjet.com](https://mailjet.com) — free tier is sufficient
+2. Verify the email address you want to send backups from
+3. Go to **Account → API Keys** and copy your **API Key** and **Secret Key**
+4. Add them as `MAILJET_API_KEY` and `MAILJET_SECRET_KEY` in your environment variables
+5. Generate a random string for `CRON_SECRET` — this secures the backup endpoint so only Vercel can trigger it
+
+The backup runs automatically on the 1st of every month at 8am UTC. Each user receives their travel records as an Excel attachment. To trigger it manually:
+
+```bash
+curl -H "Authorization: Bearer your_cron_secret" https://your-vercel-url.vercel.app/api/backup
+```
+
+---
+
+## 3. Local Development
 
 ### Clone and install
 
@@ -92,6 +108,9 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+MAILJET_API_KEY=your_mailjet_api_key
+MAILJET_SECRET_KEY=your_mailjet_secret_key
+CRON_SECRET=any_long_random_string_you_make_up
 ```
 
 `.env.local` is in `.gitignore` and will never be committed.
@@ -106,7 +125,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 3. Vercel Deployment
+## 4. Vercel Deployment
 
 ### Connect the repo
 
@@ -124,6 +143,9 @@ In your Vercel project → **Settings → Environment Variables**, add:
 | `NEXT_PUBLIC_SUPABASE_URL` | your Supabase project URL | Production, Preview, Development |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | your anon key | Production, Preview, Development |
 | `SUPABASE_SERVICE_ROLE_KEY` | your service role key | Production, Preview, Development |
+| `MAILJET_API_KEY` | Mailjet API key | Production, Preview, Development |
+| `MAILJET_SECRET_KEY` | Mailjet secret key | Production, Preview, Development |
+| `CRON_SECRET` | random string to secure the backup endpoint | Production, Preview, Development |
 
 Click **Save** for each.
 
@@ -133,7 +155,7 @@ Go to **Deployments** → find the latest deployment → **Redeploy**. Or push a
 
 ---
 
-## 4. Custom Domain
+## 5. Custom Domain
 
 ### Add the domain in Vercel
 
@@ -167,7 +189,7 @@ After pointing your custom domain, go back to Supabase → **Authentication → 
 
 ---
 
-## 5. Ongoing Maintenance
+## 6. Ongoing Maintenance
 
 ### Rotating the service role key
 

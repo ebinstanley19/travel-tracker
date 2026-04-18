@@ -40,3 +40,4 @@ Route Book is a private travel history tracker. It lets you log every trip you'v
 - Four visual themes: Sand, Ocean, Sunset, White
 - Password reset via email
 - Account deletion with full data cleanup
+- Monthly automated email backup (Excel attachment via Mailjet)
