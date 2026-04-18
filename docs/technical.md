@@ -299,7 +299,7 @@ Supported formats:
 
 ## Theming
 
-Three themes are available: `sand`, `ocean`, `sunset`. The active theme is stored in localStorage under `routebook-theme` and applied as a `data-theme` attribute on `<html>`. CSS variables in `globals.css` map each theme to a set of colours consumed by Tailwind.
+Four themes are available: `sand`, `ocean`, `sunset`, `white`. The active theme is stored in localStorage under `routebook-theme` and applied as a `data-theme` attribute on `<html>`. CSS variables in `globals.css` map each theme to a set of colours consumed by Tailwind.
 
 ---
 

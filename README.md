@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Route Book
 
-## Getting Started
+A private travel history tracker. Log every trip you've taken and explore your history across a timeline, table, and interactive map.
 
-First, run the development server:
+**[Live app →](https://travel-tracker-tan.vercel.app)**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Add trips with date ranges, origin, destination, and notes
+- Timeline view grouped by year and month
+- Table view with sortable columns and bulk delete
+- Interactive map with country bubbles sized by visit count
+- Insights tab with travel statistics
+- Filter by country, year, or free-text search
+- Import trips from Excel (.xlsx) or CSV
+- Export full history to Excel
+- Four colour themes: Sand, Ocean, Sunset, White
+- Password reset via email
+- Account deletion with full data wipe
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+| Layer | Technology |
+| ----- | ---------- |
+| Framework | Next.js (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 + shadcn/ui |
+| Auth & Database | Supabase |
+| Maps | Leaflet + react-leaflet |
+| Excel | SheetJS |
+| Hosting | Vercel |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Self-hosting
 
-## Deploy on Vercel
+See [docs/deployment.md](docs/deployment.md) for full setup instructions covering Supabase, local development, and Vercel deployment.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Support
+
+If this app is useful to you, you can buy me a coffee via PayPal — any amount is appreciated.
+
+[![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-0070ba?logo=paypal&logoColor=white)](https://www.paypal.com/donate?business=ebinstnly%40gmail.com&currency_code=USD)
+
+---
+
+## License
+
+MIT

@@ -37,6 +37,6 @@ Route Book is a private travel history tracker. It lets you log every trip you'v
 - Filter by country, year, or free-text search
 - Import trips from Excel (.xlsx) or CSV
 - Export full history to Excel
-- Three visual themes: Sand, Ocean, Sunset
+- Four visual themes: Sand, Ocean, Sunset, White
 - Password reset via email
 - Account deletion with full data cleanup
