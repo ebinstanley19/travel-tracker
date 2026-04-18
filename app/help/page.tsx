@@ -141,6 +141,17 @@ export default function HelpPage() {
 
         <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <CardHeader>
+            <CardTitle>Automatic backup</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-slate-700">
+            <p>On the 1st of every month, Route Book automatically emails you a backup of all your travel records as an Excel file.</p>
+            <p>The backup is sent to your account email address. You can reimport it at any time using <strong>Import Excel</strong> if you ever need to restore your data.</p>
+            <p>You can also manually export your data anytime via <strong>Export Excel</strong> in the toolbar.</p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader>
             <CardTitle>Visa tracker</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-slate-700">
