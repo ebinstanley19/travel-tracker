@@ -2,7 +2,7 @@
 
 A private travel history tracker. Log every trip you've taken and explore your history across a timeline, table, and interactive map.
 
-> This is a self-hosted app — there is no hosted version. You deploy your own instance and your data stays yours. See [Deploy your own](#self-hosting) to get started.
+> Deploy your own instance and keep your data private, or [request access](#self-hosting) to the hosted version.
 
 If this app is useful to you, consider supporting it — any amount helps.
 
