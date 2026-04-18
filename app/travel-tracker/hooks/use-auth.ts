@@ -128,6 +128,22 @@ export function useAuth() {
     }
   }
 
+  async function handleGoogleSignIn(): Promise<void> {
+    setAuthError("");
+    setAuthPending(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/` : undefined,
+        },
+      });
+      if (error) setAuthError(error.message);
+    } finally {
+      setAuthPending(false);
+    }
+  }
+
   async function handleSignOut(): Promise<void> {
     setAuthError("");
     setAuthInfo("");
@@ -162,6 +178,7 @@ export function useAuth() {
     setAuthPassword,
     handleAuthSubmit,
     handleForgotPassword,
+    handleGoogleSignIn,
     handleSignOut,
   };
 }

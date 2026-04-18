@@ -123,6 +123,7 @@ export default function TravelHistoryTrackerApp() {
             onPasswordChange={auth.setAuthPassword}
             onForgotPassword={auth.handleForgotPassword}
             onSubmit={auth.handleAuthSubmit}
+            onGoogleSignIn={auth.handleGoogleSignIn}
           />
         </div>
       </div>

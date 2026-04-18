@@ -19,6 +19,7 @@ interface AuthCardProps {
   onPasswordChange: (password: string) => void;
   onForgotPassword: () => void;
   onSubmit: () => void;
+  onGoogleSignIn: () => void;
 }
 
 export function AuthCard({
@@ -35,6 +36,7 @@ export function AuthCard({
   onPasswordChange,
   onForgotPassword,
   onSubmit,
+  onGoogleSignIn,
 }: AuthCardProps) {
   return (
     <Card className="mx-auto w-full max-w-md overflow-hidden rounded-[2rem] border border-white/60 bg-white/80 shadow-[0_20px_80px_rgba(22,27,45,0.12)] backdrop-blur-xl">
@@ -107,6 +109,27 @@ export function AuthCard({
         <Button className="h-12 w-full rounded-2xl bg-slate-950 text-white hover:bg-slate-800" onClick={onSubmit} disabled={pending}>
           {pending ? "Please wait..." : mode === "login" ? "Log in" : "Create account"}
         </Button>
+
+        <div className="relative flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs text-slate-400">or</span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <button
+          type="button"
+          onClick={onGoogleSignIn}
+          disabled={pending}
+          className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+        >
+          <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.86l6.08-6.08C34.46 3.09 29.5 1 24 1 14.82 1 7.07 6.48 3.64 14.22l7.08 5.5C12.43 13.61 17.73 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.14 24.5c0-1.64-.15-3.22-.42-4.75H24v9h12.44c-.54 2.93-2.18 5.41-4.64 7.08l7.08 5.5C42.9 37.3 46.14 31.36 46.14 24.5z"/>
+            <path fill="#FBBC05" d="M10.72 28.28A14.6 14.6 0 0 1 9.5 24c0-1.49.26-2.93.72-4.28l-7.08-5.5A23.94 23.94 0 0 0 0 24c0 3.86.93 7.5 2.56 10.72l7.08-5.5-.92.06z"/>
+            <path fill="#34A853" d="M24 47c5.5 0 10.12-1.82 13.5-4.94l-7.08-5.5C28.6 38.1 26.42 39 24 39c-6.27 0-11.57-4.11-13.28-9.72l-7.08 5.5C7.07 42.52 14.82 47 24 47z"/>
+          </svg>
+          Continue with Google
+        </button>
 
         <div className="text-sm text-slate-500">
           {mode === "login" ? "New here?" : "Already have an account?"}{" "}
