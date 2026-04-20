@@ -42,45 +42,45 @@ export function EntryDialog({
           <DialogTitle>{editingId ? "Edit travel entry" : "Add travel entry"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="min-w-0 space-y-1.5">
               <Label>From date</Label>
-              <div className="relative">
+              <div className="flex min-w-0 items-center gap-1">
                 <Input
                   type="date"
                   value={form.date}
                   onChange={(e) => onFormChange({ ...form, date: e.target.value })}
-                  className={`h-11${form.date ? " pr-8" : ""}`}
+                  className="h-11 min-w-0 flex-1"
                 />
                 {form.date && (
                   <button
                     type="button"
                     onClick={() => onFormChange({ ...form, date: "" })}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-slate-700"
+                    className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                     aria-label="Clear from date"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
             </div>
             <div className="min-w-0 space-y-1.5">
               <Label>To date</Label>
-              <div className="relative">
+              <div className="flex min-w-0 items-center gap-1">
                 <Input
                   type="date"
                   value={form.endDate}
                   onChange={(e) => onFormChange({ ...form, endDate: e.target.value })}
-                  className={`h-11${form.endDate ? " pr-8" : ""}`}
+                  className="h-11 min-w-0 flex-1"
                 />
                 {form.endDate && (
                   <button
                     type="button"
                     onClick={() => onFormChange({ ...form, endDate: "" })}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-slate-700"
+                    className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                     aria-label="Clear to date"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
@@ -94,7 +94,7 @@ export function EntryDialog({
                 value={form.fromCountry || ""}
                 onValueChange={(value) => onFormChange({ ...form, fromCountry: value })}
               >
-                <SelectTrigger className="h-11 w-full">
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select departure country" />
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
@@ -112,7 +112,7 @@ export function EntryDialog({
                 value={form.toCountry || ""}
                 onValueChange={(value) => onFormChange({ ...form, toCountry: value })}
               >
-                <SelectTrigger className="h-11 w-full">
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select destination country" />
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
