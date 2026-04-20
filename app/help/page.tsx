@@ -150,21 +150,6 @@ export default function HelpPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border border-white/60 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle>Visa tracker</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-slate-700">
-            <p>Access via <strong>Settings → Visa tracker</strong>. Store a record for each visa or entry permit:</p>
-            <ul className="space-y-1 pl-4 list-disc text-slate-600">
-              <li><strong>Country, Type</strong> — where the visa is for and what kind (Tourist, Work, etc.).</li>
-              <li><strong>Entry / Exit date</strong> — when you entered and left.</li>
-              <li><strong>Max stay</strong> — the maximum days permitted on that visa.</li>
-              <li><strong>Expiry date</strong> — when the visa itself expires. Rows turn amber when expiry is within 30 days and red when already expired.</li>
-            </ul>
-            <p>Click the pencil icon to edit a record or the bin icon to delete it.</p>
-          </CardContent>
-        </Card>
 
       </div>
     </div>

@@ -180,9 +180,6 @@ export default function TravelHistoryTrackerApp() {
                     <Link href="/help"><HelpCircle className="mr-2 h-4 w-4" /> Help</Link>
                   </Button>
                   <Button asChild variant="ghost" className="h-11 w-full justify-start rounded-none px-3" onClick={() => setSettingsOpen(false)}>
-                    <Link href="/visa"><UserCircle2 className="mr-2 h-4 w-4" /> Visa tracker</Link>
-                  </Button>
-                  <Button asChild variant="ghost" className="h-11 w-full justify-start rounded-none px-3" onClick={() => setSettingsOpen(false)}>
                     <Link href="/profile"><UserCircle2 className="mr-2 h-4 w-4" /> Profile</Link>
                   </Button>
                   <Button variant="ghost" className="h-11 w-full justify-start rounded-none px-3 text-red-600 hover:text-red-700" onClick={() => { setSettingsOpen(false); void auth.handleSignOut(); }} disabled={auth.authPending}>
@@ -350,9 +347,6 @@ export default function TravelHistoryTrackerApp() {
             </Button>
             <Button asChild variant="ghost" className="h-12 w-full justify-start rounded-none px-4" onClick={() => setSettingsOpen(false)}>
               <Link href="/help"><HelpCircle className="mr-2 h-4 w-4" /> Help</Link>
-            </Button>
-            <Button asChild variant="ghost" className="h-12 w-full justify-start rounded-none px-4" onClick={() => setSettingsOpen(false)}>
-              <Link href="/visa"><UserCircle2 className="mr-2 h-4 w-4" /> Visa tracker</Link>
             </Button>
             <Button asChild variant="ghost" className="h-12 w-full justify-start rounded-none px-4" onClick={() => setSettingsOpen(false)}>
               <Link href="/profile"><UserCircle2 className="mr-2 h-4 w-4" /> Profile</Link>
