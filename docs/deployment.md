@@ -92,7 +92,53 @@ curl -H "Authorization: Bearer your_cron_secret" https://your-vercel-url.vercel.
 
 ---
 
-## 3. Local Development
+## 3. Web Push Notifications (optional)
+
+Push notifications let users receive daily trip reminders on iOS/Android when the app is added to their home screen.
+
+### Create the push_subscriptions table
+
+In Supabase SQL Editor:
+
+```sql
+CREATE TABLE push_subscriptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  endpoint text NOT NULL UNIQUE,
+  p256dh text NOT NULL,
+  auth text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Only the service role (used by the cron) can read all subscriptions.
+-- Users can only manage their own.
+CREATE POLICY "manage_own_subscriptions" ON push_subscriptions
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+```
+
+### Generate VAPID keys
+
+Install the `web-push` CLI once globally, then generate a key pair:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+This outputs a public key and a private key. Store them as environment variables (see below).
+
+For `VAPID_SUBJECT`, use `mailto:you@yourdomain.com` — this is sent to push services as a contact address.
+
+### How it works
+
+- **Subscribe**: when a user taps "Enable push alerts" in Settings, the browser registers the service worker (`/sw.js`) and saves the push subscription to the `push_subscriptions` table via `/api/push/subscribe`.
+- **Daily cron**: Vercel runs `/api/push/cron` at 7 am UTC every day. For each subscribed user it fetches their travel records and sends push notifications for: trips starting today / tomorrow / in 7 days, last day of a trip, and travel anniversaries (same day in a prior year).
+- **Unsubscribe**: tapping "Disable push alerts" calls DELETE on `/api/push/subscribe` and unregisters the device.
+
+---
+
+## 4. Local Development
 
 ### Clone and install
 
@@ -111,6 +157,9 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 MAILJET_API_KEY=your_mailjet_api_key
 MAILJET_SECRET_KEY=your_mailjet_secret_key
 CRON_SECRET=any_long_random_string_you_make_up
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
+VAPID_PRIVATE_KEY=your_vapid_private_key
+VAPID_SUBJECT=mailto:you@yourdomain.com
 ```
 
 `.env.local` is in `.gitignore` and will never be committed.
@@ -125,7 +174,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 4. Vercel Deployment
+## 5. Vercel Deployment
 
 ### Connect the repo
 
@@ -146,6 +195,9 @@ In your Vercel project → **Settings → Environment Variables**, add:
 | `MAILJET_API_KEY` | Mailjet API key | Production, Preview, Development |
 | `MAILJET_SECRET_KEY` | Mailjet secret key | Production, Preview, Development |
 | `CRON_SECRET` | random string to secure the backup endpoint | Production, Preview, Development |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | VAPID public key (from `npx web-push generate-vapid-keys`) | Production, Preview, Development |
+| `VAPID_PRIVATE_KEY` | VAPID private key | Production, Preview, Development |
+| `VAPID_SUBJECT` | `mailto:you@yourdomain.com` | Production, Preview, Development |
 
 Click **Save** for each.
 
@@ -155,7 +207,7 @@ Go to **Deployments** → find the latest deployment → **Redeploy**. Or push a
 
 ---
 
-## 5. Custom Domain
+## 6. Custom Domain
 
 ### Add the domain in Vercel
 
@@ -189,7 +241,7 @@ After pointing your custom domain, go back to Supabase → **Authentication → 
 
 ---
 
-## 6. Ongoing Maintenance
+## 7. Ongoing Maintenance
 
 ### Rotating the service role key
 

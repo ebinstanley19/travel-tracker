@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, ChevronDown, Download, HelpCircle, LogOut, Pencil, Plane, Plus, Search, Settings, Trash2, Upload, UserCircle2 } from "lucide-react";
+import { Bell, BellRing, ChevronDown, Download, HelpCircle, LogOut, Pencil, Plane, Plus, Search, Settings, Trash2, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +17,7 @@ import { LOGO_VARIANT } from "@/app/travel-tracker/brand-config";
 import { useAuth } from "@/app/travel-tracker/hooks/use-auth";
 import { useFilters } from "@/app/travel-tracker/hooks/use-filters";
 import { usePreferences } from "@/app/travel-tracker/hooks/use-preferences";
+import { usePushNotifications } from "@/app/travel-tracker/hooks/use-push-notifications";
 import { useTravelEntries } from "@/app/travel-tracker/hooks/use-travel-entries";
 import { downloadImportTemplate, exportToExcel } from "@/app/travel-tracker/utils";
 
@@ -27,6 +28,7 @@ export default function TravelHistoryTrackerApp() {
   const [defaultView, setDefaultView] = useState("timeline");
   const travelEntries = useTravelEntries({ user: auth.user, homeCountry });
   const filters = useFilters({ entries: travelEntries.entries, homeCountry });
+  const pushNotifs = usePushNotifications(auth.user);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
@@ -360,6 +362,12 @@ export default function TravelHistoryTrackerApp() {
                   <Button asChild variant="ghost" className="h-11 w-full justify-start rounded-none px-3" onClick={() => setSettingsOpen(false)}>
                     <Link href="/profile"><UserCircle2 className="mr-2 h-4 w-4" /> Profile</Link>
                   </Button>
+                  {pushNotifs.permission !== "unsupported" && pushNotifs.permission !== "denied" && (
+                    <Button variant="ghost" className="h-11 w-full justify-start rounded-none px-3" disabled={pushNotifs.loading} onClick={() => pushNotifs.subscribed ? pushNotifs.unsubscribe() : pushNotifs.subscribe()}>
+                      <BellRing className="mr-2 h-4 w-4" />
+                      {pushNotifs.loading ? "…" : pushNotifs.subscribed ? "Disable push alerts" : "Enable push alerts"}
+                    </Button>
+                  )}
                   <Button variant="ghost" className="h-11 w-full justify-start rounded-none px-3 text-red-600 hover:text-red-700" onClick={() => { setSettingsOpen(false); void auth.handleSignOut(); }} disabled={auth.authPending}>
                     <LogOut className="mr-2 h-4 w-4" /> {auth.authPending ? "Logging out..." : "Log out"}
                   </Button>
@@ -653,6 +661,12 @@ export default function TravelHistoryTrackerApp() {
             <Button asChild variant="ghost" className="h-12 w-full justify-start rounded-none px-4" onClick={() => setSettingsOpen(false)}>
               <Link href="/profile"><UserCircle2 className="mr-2 h-4 w-4" /> Profile</Link>
             </Button>
+            {pushNotifs.permission !== "unsupported" && pushNotifs.permission !== "denied" && (
+              <Button variant="ghost" className="h-12 w-full justify-start rounded-none px-4" disabled={pushNotifs.loading} onClick={() => pushNotifs.subscribed ? pushNotifs.unsubscribe() : pushNotifs.subscribe()}>
+                <BellRing className="mr-2 h-4 w-4" />
+                {pushNotifs.loading ? "…" : pushNotifs.subscribed ? "Disable push alerts" : "Enable push alerts"}
+              </Button>
+            )}
             <Button variant="ghost" className="h-12 w-full justify-start rounded-none px-4 text-red-600 hover:text-red-700" onClick={() => { setSettingsOpen(false); void auth.handleSignOut(); }} disabled={auth.authPending}>
               <LogOut className="mr-2 h-4 w-4" /> {auth.authPending ? "Logging out..." : "Log out"}
             </Button>
