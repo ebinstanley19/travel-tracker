@@ -36,33 +36,33 @@ export function EntryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl rounded-2xl">
+      <DialogContent className="sm:max-w-2xl rounded-2xl overflow-hidden">
         <DialogHeader>
           <DialogTitle>{editingId ? "Edit travel entry" : "Add travel entry"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="min-w-0 space-y-1.5">
               <Label>From date</Label>
               <Input
                 type="date"
                 value={form.date}
                 onChange={(e) => onFormChange({ ...form, date: e.target.value })}
-                className="h-11"
+                className="h-11 w-full"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="min-w-0 space-y-1.5">
               <Label>To date</Label>
               <Input
                 type="date"
                 value={form.endDate}
                 onChange={(e) => onFormChange({ ...form, endDate: e.target.value })}
-                className="h-11"
+                className="h-11 w-full"
               />
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>From</Label>
               <Select
@@ -101,7 +101,7 @@ export function EntryDialog({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>City (optional)</Label>
               <Input

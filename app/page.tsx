@@ -29,6 +29,7 @@ export default function TravelHistoryTrackerApp() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
+  const settingsMobilePanelRef = useRef<HTMLDivElement | null>(null);
   const filtersRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -60,7 +61,10 @@ export default function TravelHistoryTrackerApp() {
 
   useEffect(() => {
     function onPointerDown(event: MouseEvent) {
-      if (!settingsMenuRef.current?.contains(event.target as Node)) {
+      if (
+        !settingsMenuRef.current?.contains(event.target as Node) &&
+        !settingsMobilePanelRef.current?.contains(event.target as Node)
+      ) {
         setSettingsOpen(false);
       }
     }
@@ -331,7 +335,7 @@ export default function TravelHistoryTrackerApp() {
       {settingsOpen ? (
         <div className="md:hidden">
           <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setSettingsOpen(false)} />
-          <div className="fixed bottom-16 left-2 right-2 z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+          <div ref={settingsMobilePanelRef} className="fixed bottom-16 left-2 right-2 z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
             <div className="border-b border-slate-100 px-4 py-3">
               <p className="truncate text-sm font-semibold text-slate-800">
                 {auth.user?.user_metadata?.full_name ?? auth.user?.email?.split("@")[0]}

@@ -69,9 +69,9 @@ export function FiltersCard({
           )}
         </div>
 
-        {/* All filters — one row */}
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="flex-1 min-w-0">
+        {/* All filters — 2-col grid on mobile, single row on sm+ */}
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-row">
+          <div className="col-span-2 sm:flex-1 min-w-0">
             <Label className={labelCls}>Search</Label>
             <div className="relative mt-2">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -93,7 +93,7 @@ export function FiltersCard({
               )}
             </div>
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="sm:flex-1 min-w-0">
             <Label className={labelCls}>Country</Label>
             <Select value={countryFilter} onValueChange={onCountryChange}>
               <SelectTrigger className={controlCls}><SelectValue placeholder="All countries" /></SelectTrigger>
@@ -105,7 +105,7 @@ export function FiltersCard({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="sm:flex-1 min-w-0">
             <Label className={labelCls}>Year</Label>
             <Select value={yearFilter} onValueChange={onYearChange}>
               <SelectTrigger className={controlCls}><SelectValue placeholder="All years" /></SelectTrigger>
@@ -117,7 +117,7 @@ export function FiltersCard({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="sm:flex-1 min-w-0">
             <Label className={labelCls}>From date</Label>
             <Input
               type="date"
@@ -126,7 +126,7 @@ export function FiltersCard({
               className={controlCls}
             />
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="sm:flex-1 min-w-0">
             <Label className={labelCls}>To date</Label>
             <Input
               type="date"
