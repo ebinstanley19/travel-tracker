@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Download, HelpCircle, LogOut, Plus, Settings, Upload, UserCircle2 } from "lucide-react";
+import { ChevronDown, Download, HelpCircle, LogOut, Plus, Search, Settings, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,6 +30,7 @@ export default function TravelHistoryTrackerApp() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
 
   const greeting = (() => {
@@ -222,7 +223,7 @@ export default function TravelHistoryTrackerApp() {
           />
         </div>
 
-        <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
+        <div className={`animate-fade-up md:block${filtersOpen ? " block" : " hidden"}`} style={{ animationDelay: "120ms" }}>
           <FiltersCard
             search={filters.search}
             countryFilter={filters.countryFilter}
@@ -307,10 +308,10 @@ export default function TravelHistoryTrackerApp() {
           <Download className="h-5 w-5" /> Export
         </button>
         <button
-          className="flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium text-slate-600 active:bg-slate-50"
-          onClick={triggerImport}
+          className={`flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium active:bg-slate-50 ${filtersOpen ? "text-slate-950" : "text-slate-600"}`}
+          onClick={() => setFiltersOpen((prev) => !prev)}
         >
-          <Upload className="h-5 w-5" /> Import
+          <Search className="h-5 w-5" /> Search
         </button>
         <button
           className="flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium text-slate-600 active:bg-slate-50"
@@ -331,6 +332,9 @@ export default function TravelHistoryTrackerApp() {
               </p>
               <p className="truncate text-xs text-slate-500">{auth.user?.email}</p>
             </div>
+            <Button variant="ghost" className="h-12 w-full justify-start rounded-none px-4" onClick={() => { setSettingsOpen(false); triggerImport(); }}>
+              <Upload className="mr-2 h-4 w-4" /> Import Excel
+            </Button>
             <Button variant="ghost" className="h-12 w-full justify-start rounded-none px-4" onClick={() => { setSettingsOpen(false); downloadImportTemplate(); }}>
               <Download className="mr-2 h-4 w-4" /> Download template
             </Button>
