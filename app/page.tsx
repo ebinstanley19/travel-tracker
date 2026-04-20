@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Download, HelpCircle, LogOut, Plus, Search, Settings, Upload, UserCircle2 } from "lucide-react";
+import { ChevronDown, Download, HelpCircle, LogOut, Plus, Search, Settings, Upload, UserCircle2, X } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AuthCard } from "@/app/travel-tracker/auth-card";
 import { EntryDialog } from "@/app/travel-tracker/entry-dialog";
 import { FiltersCard } from "@/app/travel-tracker/filters-card";
@@ -29,7 +30,6 @@ export default function TravelHistoryTrackerApp() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
-  const filtersRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
@@ -224,7 +224,7 @@ export default function TravelHistoryTrackerApp() {
           />
         </div>
 
-        <div ref={filtersRef} className={`animate-fade-up md:block${filtersOpen ? " block" : " hidden"}`} style={{ animationDelay: "120ms" }}>
+        <div className="hidden md:block animate-fade-up" style={{ animationDelay: "120ms" }}>
           <FiltersCard
             search={filters.search}
             countryFilter={filters.countryFilter}
@@ -310,12 +310,7 @@ export default function TravelHistoryTrackerApp() {
         </button>
         <button
           className={`flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium active:bg-slate-50 ${filtersOpen ? "text-slate-950" : "text-slate-600"}`}
-          onClick={() => {
-            setFiltersOpen((prev) => {
-              if (!prev) setTimeout(() => filtersRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
-              return !prev;
-            });
-          }}
+          onClick={() => setFiltersOpen((prev) => !prev)}
         >
           <Search className="h-5 w-5" /> Search
         </button>
@@ -326,6 +321,68 @@ export default function TravelHistoryTrackerApp() {
           <Settings className="h-5 w-5" /> Settings
         </button>
       </div>
+
+      {/* Mobile search bottom sheet */}
+      {filtersOpen ? (
+        <div className="md:hidden">
+          <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setFiltersOpen(false)} />
+          <div className="fixed bottom-16 left-0 right-0 z-50 rounded-t-2xl border-t border-slate-200 bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+              <h2 className="text-sm font-semibold text-slate-800">Search & Filters</h2>
+              {(filters.search !== "" || filters.countryFilter !== "all" || filters.yearFilter !== "all" || filters.fromDateFilter !== "" || filters.toDateFilter !== "") ? (
+                <button
+                  type="button"
+                  onClick={() => { filters.setSearch(""); filters.setCountryFilter("all"); filters.setYearFilter("all"); filters.setFromDateFilter(""); filters.setToDateFilter(""); }}
+                  className="flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-500"
+                >
+                  <X className="h-3 w-3" /> Clear all
+                </button>
+              ) : null}
+            </div>
+            <div className="space-y-4 p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  autoFocus
+                  value={filters.search}
+                  onChange={(e) => filters.setSearch(e.target.value)}
+                  placeholder="Country, city, or notes…"
+                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-9 pr-4 text-sm outline-none focus:border-slate-400"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Select value={filters.countryFilter} onValueChange={filters.setCountryFilter}>
+                  <SelectTrigger className="h-11 rounded-2xl border-slate-200 bg-white shadow-none"><SelectValue placeholder="All countries" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All countries</SelectItem>
+                    {filters.countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={filters.yearFilter} onValueChange={filters.setYearFilter}>
+                  <SelectTrigger className="h-11 rounded-2xl border-slate-200 bg-white shadow-none"><SelectValue placeholder="All years" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All years</SelectItem>
+                    {filters.years.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <input
+                  type="date"
+                  value={filters.fromDateFilter}
+                  onChange={(e) => filters.setFromDateFilter(e.target.value)}
+                  className="h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm"
+                />
+                <input
+                  type="date"
+                  value={filters.toDateFilter}
+                  onChange={(e) => filters.setToDateFilter(e.target.value)}
+                  className="h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm"
+                />
+              </div>
+              <Button className="w-full rounded-2xl" onClick={() => setFiltersOpen(false)}>Done</Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Mobile settings panel */}
       {settingsOpen ? (
