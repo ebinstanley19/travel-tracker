@@ -119,42 +119,42 @@ export function FiltersCard({
           </div>
           <div className="col-span-2 sm:flex-1 min-w-0">
             <Label className={labelCls}>From date</Label>
-            <div className="mt-2 flex min-w-0 items-center gap-1">
+            <div className="relative mt-2">
               <Input
                 type="date"
                 value={fromDateFilter}
                 onChange={(e) => onFromDateChange(e.target.value)}
-                className="h-11 min-w-0 flex-1 rounded-2xl border-slate-200/80 bg-white/80 shadow-none"
+                className={`h-11 rounded-2xl border-slate-200/80 bg-white/80 shadow-none${fromDateFilter ? " pr-8" : ""}`}
               />
               {fromDateFilter && (
                 <button
                   type="button"
                   onClick={() => onFromDateChange("")}
-                  className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-slate-700"
                   aria-label="Clear from date"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
           </div>
           <div className="col-span-2 sm:flex-1 min-w-0">
             <Label className={labelCls}>To date</Label>
-            <div className="mt-2 flex min-w-0 items-center gap-1">
+            <div className="relative mt-2">
               <Input
                 type="date"
                 value={toDateFilter}
                 onChange={(e) => onToDateChange(e.target.value)}
-                className="h-11 min-w-0 flex-1 rounded-2xl border-slate-200/80 bg-white/80 shadow-none"
+                className={`h-11 rounded-2xl border-slate-200/80 bg-white/80 shadow-none${toDateFilter ? " pr-8" : ""}`}
               />
               {toDateFilter && (
                 <button
                   type="button"
                   onClick={() => onToDateChange("")}
-                  className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-slate-700"
                   aria-label="Clear to date"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
