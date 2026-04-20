@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Download, HelpCircle, LogOut, Plus, Search, Settings, Upload, UserCircle2 } from "lucide-react";
+import { ChevronDown, Download, HelpCircle, LogOut, Pencil, Plane, Plus, Search, Settings, Trash2, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +33,8 @@ export default function TravelHistoryTrackerApp() {
   const filtersRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [activeUpcomingOptionsId, setActiveUpcomingOptionsId] = useState<string | null>(null);
+  const [upcomingExpanded, setUpcomingExpanded] = useState(true);
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
 
   const greeting = (() => {
@@ -61,11 +63,15 @@ export default function TravelHistoryTrackerApp() {
 
   useEffect(() => {
     function onPointerDown(event: MouseEvent) {
+      const target = event.target as HTMLElement;
       if (
-        !settingsMenuRef.current?.contains(event.target as Node) &&
-        !settingsMobilePanelRef.current?.contains(event.target as Node)
+        !settingsMenuRef.current?.contains(target) &&
+        !settingsMobilePanelRef.current?.contains(target)
       ) {
         setSettingsOpen(false);
+      }
+      if (!target.closest("[data-upcoming-options-menu]")) {
+        setActiveUpcomingOptionsId(null);
       }
     }
     document.addEventListener("mousedown", onPointerDown);
@@ -224,6 +230,122 @@ export default function TravelHistoryTrackerApp() {
             topCountryVisits={filters.stats.topCountryVisits}
           />
         </div>
+
+        {filters.currentlyTravelingEntries.length > 0 && (
+          <div className="animate-fade-up" style={{ animationDelay: "75ms" }}>
+            <div className="rounded-[2rem] border border-emerald-200/70 bg-emerald-50/80 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+              <div className="flex items-center gap-3 border-b border-emerald-100 px-5 py-4">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-600">
+                  <Plane className="h-3.5 w-3.5 text-white" />
+                </div>
+                <h2 className="text-sm font-semibold text-emerald-900">Currently traveling</h2>
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                  {filters.currentlyTravelingEntries.length}
+                </span>
+              </div>
+              <div className="divide-y divide-emerald-100">
+                {filters.currentlyTravelingEntries.map((entry) => {
+                  const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+                  const from = getCountryFromLocation(entry.from) || entry.from || "";
+                  const daysLeft = Math.ceil((new Date(entry.endDate!).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
+                  return (
+                    <div key={entry.id} className="flex items-center gap-3 px-5 py-3.5">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate font-medium text-emerald-900">{dest}</span>
+                          <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                            {daysLeft === 0 ? "Ends today" : `${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-emerald-700">
+                          {from && `${from} → `}{prettyDate(entry.date)}{entry.endDate && entry.endDate !== entry.date ? ` – ${prettyDate(entry.endDate)}` : ""}
+                          {entry.notes ? ` · ${entry.notes}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {filters.upcomingEntries.length > 0 && (
+          <div className="animate-fade-up" style={{ animationDelay: "90ms" }}>
+            <div className="rounded-[2rem] border border-white/60 bg-white/75 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <button
+                type="button"
+                onClick={() => setUpcomingExpanded((prev) => !prev)}
+                className={`flex w-full items-center gap-2.5 px-5 py-4 text-left transition-colors hover:bg-slate-50/50 ${upcomingExpanded ? "border-b border-slate-100" : ""}`}
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-950">
+                  <Plane className="h-3.5 w-3.5 text-white" />
+                </div>
+                <h2 className="text-sm font-semibold text-slate-950">Upcoming trips</h2>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">
+                  {filters.upcomingEntries.length}
+                </span>
+                <ChevronDown className={`ml-auto h-4 w-4 text-slate-400 transition-transform duration-200 ${upcomingExpanded ? "rotate-180" : ""}`} />
+              </button>
+              <div
+                className="grid overflow-hidden transition-[grid-template-rows] duration-300 ease-out"
+                style={{ gridTemplateRows: upcomingExpanded ? "1fr" : "0fr" }}
+              >
+              <div className="overflow-hidden">
+              <div className="divide-y divide-slate-100">
+                {filters.upcomingEntries.map((entry) => {
+                  const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+                  const from = getCountryFromLocation(entry.from) || entry.from || "";
+                  const days = Math.ceil((new Date(entry.date).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
+                  const badge =
+                    days === 0 ? { label: "Today", cls: "bg-amber-100 text-amber-700" } :
+                    days === 1 ? { label: "Tomorrow", cls: "bg-amber-100 text-amber-700" } :
+                    days <= 7  ? { label: `In ${days} days`, cls: "bg-amber-100 text-amber-700" } :
+                    days <= 30 ? { label: `In ${days} days`, cls: "bg-blue-100 text-blue-700" } :
+                                 { label: `In ${days} days`, cls: "bg-slate-100 text-slate-600" };
+                  return (
+                    <div key={entry.id} className="flex items-center gap-3 px-5 py-3.5">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-slate-900 truncate">{dest}</span>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.cls}`}>{badge.label}</span>
+                        </div>
+                        <p className="mt-0.5 text-xs text-slate-500 truncate">
+                          {from && `${from} → `}{prettyDate(entry.date)}{entry.endDate && entry.endDate !== entry.date ? ` – ${prettyDate(entry.endDate)}` : ""}
+                          {entry.notes ? ` · ${entry.notes}` : ""}
+                        </p>
+                      </div>
+                      <div className="relative shrink-0" data-upcoming-options-menu>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl border-slate-200 bg-white/90"
+                          onClick={() => setActiveUpcomingOptionsId(activeUpcomingOptionsId === entry.id ? null : entry.id)}
+                        >
+                          Options <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                        </Button>
+                        {activeUpcomingOptionsId === entry.id && (
+                          <div className="absolute right-0 bottom-full z-30 mb-2 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:bottom-auto sm:top-full sm:mb-0 sm:mt-2">
+                            <Button variant="ghost" size="sm" className="h-10 w-full justify-start rounded-none px-3"
+                              onClick={() => { setActiveUpcomingOptionsId(null); travelEntries.openEditModal(entry); }}>
+                              <Pencil className="mr-2 h-4 w-4" /> Edit
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-10 w-full justify-start rounded-none px-3 text-red-600 hover:text-red-700"
+                              onClick={() => { setActiveUpcomingOptionsId(null); travelEntries.deleteEntry(entry.id); }}>
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div ref={filtersRef} className={`animate-fade-up md:block${filtersOpen ? " block" : " hidden"}`} style={{ animationDelay: "120ms" }}>
           <FiltersCard

@@ -25,24 +25,44 @@ export function useFilters({ entries, homeCountry = "" }: { entries: TravelEntry
   const [fromDateFilter, setFromDateFilter] = useState("");
   const [toDateFilter, setToDateFilter] = useState("");
 
+  const today = new Date().toISOString().split("T")[0];
+
+  const upcomingEntries = useMemo(
+    () => entries.filter((e) => e.date && e.date > today).sort((a, b) => a.date.localeCompare(b.date)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [entries]
+  );
+
+  const pastEntries = useMemo(
+    () => entries.filter((e) => !e.date || e.date <= today),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [entries]
+  );
+
+  const currentlyTravelingEntries = useMemo(
+    () => pastEntries.filter((e) => e.endDate && e.endDate >= today && e.endDate !== e.date),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pastEntries]
+  );
+
   const countries = useMemo(() => {
-    const allCountries = [...new Set(entries.flatMap((entry) => getEntryCountries(entry)))].sort();
+    const allCountries = [...new Set(pastEntries.flatMap((entry) => getEntryCountries(entry)))].sort();
     if (continentFilter === "all") return allCountries;
     return allCountries.filter((c) => CONTINENT_MAP[c] === continentFilter);
-  }, [entries, continentFilter]);
+  }, [pastEntries, continentFilter]);
 
   const years = useMemo(
     () =>
-      [...new Set(entries.map((e) => formatYear(e.date || e.endDate)).filter(Boolean))].sort(
+      [...new Set(pastEntries.map((e) => formatYear(e.date || e.endDate)).filter(Boolean))].sort(
         (a, b) => Number(b) - Number(a)
       ),
-    [entries]
+    [pastEntries]
   );
 
   const filtered = useMemo(
     () =>
       sortEntries(
-        entries.filter((entry) => {
+        pastEntries.filter((entry) => {
           const blob =
             `${entry.date} ${entry.endDate} ${entry.from} ${entry.to} ${entry.country} ${entry.purpose} ${entry.notes}`.toLowerCase();
           const matchesSearch = blob.includes(search.toLowerCase());
@@ -73,7 +93,7 @@ export function useFilters({ entries, homeCountry = "" }: { entries: TravelEntry
           return matchesSearch && matchesCountry && matchesYear && matchesContinent && matchesDateRange;
         })
       ),
-    [entries, search, countryFilter, yearFilter, continentFilter, fromDateFilter, toDateFilter]
+    [pastEntries, search, countryFilter, yearFilter, continentFilter, fromDateFilter, toDateFilter]
   );
 
   const groupedByYearMonth = useMemo<YearMonthGroup[]>(() => {
@@ -104,13 +124,13 @@ export function useFilters({ entries, homeCountry = "" }: { entries: TravelEntry
 
   const stats = useMemo<Stats>(() => {
     const normalizedHomeCountry = homeCountry.trim();
-    const uniqueCountries = new Set(entries.flatMap((entry) => getEntryCountries(entry))).size;
-    const totalTrips = entries.length;
+    const uniqueCountries = new Set(pastEntries.flatMap((entry) => getEntryCountries(entry))).size;
+    const totalTrips = pastEntries.length;
     const yearsCovered = new Set(
-      entries.map((e) => formatYear(e.date || e.endDate)).filter(Boolean)
+      pastEntries.map((e) => formatYear(e.date || e.endDate)).filter(Boolean)
     ).size;
 
-    const countryCounts = entries.reduce<Record<string, number>>((acc, item) => {
+    const countryCounts = pastEntries.reduce<Record<string, number>>((acc, item) => {
       const visitedCountry = getVisitedCountry(item);
       if (!visitedCountry) return acc;
       if (normalizedHomeCountry && visitedCountry === normalizedHomeCountry) return acc;
@@ -126,7 +146,7 @@ export function useFilters({ entries, homeCountry = "" }: { entries: TravelEntry
       topCountry: topCountryEntry?.[0] || "-",
       topCountryVisits: topCountryEntry?.[1] || 0,
     };
-  }, [entries, homeCountry]);
+  }, [pastEntries, homeCountry]);
 
   return {
     search,
@@ -145,6 +165,8 @@ export function useFilters({ entries, homeCountry = "" }: { entries: TravelEntry
     years,
     filtered,
     groupedByYearMonth,
+    upcomingEntries,
+    currentlyTravelingEntries,
     stats,
   };
 }

@@ -88,7 +88,44 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
             {deletingSelected ? "Deleting..." : `Delete selected (${visibleSelectedIds.length})`}
           </Button>
         </div>
-        <div className="w-full overflow-x-auto overscroll-x-contain [scrollbar-width:thin] [-webkit-overflow-scrolling:touch]">
+        {/* Mobile card layout */}
+        <div className="md:hidden divide-y divide-slate-200/70">
+          {sortedEntries.length === 0 ? (
+            <p className="px-5 py-8 text-center text-sm text-slate-400">No entries found.</p>
+          ) : (
+            sortedEntries.map((entry) => (
+              <div key={entry.id} className="flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/80">
+                <div className="pt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(entry.id)}
+                    onChange={() => toggleOne(entry.id)}
+                    className="h-4 w-4 rounded border-slate-300"
+                    aria-label={`Select ${entry.id}`}
+                  />
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="truncate text-sm font-semibold text-slate-900">
+                    {displayLocation(entry.from)} → {displayLocation(entry.to)}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500">
+                    <span>{prettyDateWithFormat(entry.date, dateFormat)}</span>
+                    {entry.endDate && entry.endDate !== entry.date && (
+                      <span>– {prettyDateWithFormat(entry.endDate, dateFormat)}</span>
+                    )}
+                    {entry.purpose && <span className="text-slate-400">· {entry.purpose}</span>}
+                  </div>
+                  {entry.notes && (
+                    <p className="truncate text-xs text-slate-400">{entry.notes}</p>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop table layout */}
+        <div className="hidden md:block w-full overflow-x-auto overscroll-x-contain [scrollbar-width:thin] [-webkit-overflow-scrolling:touch]">
           <div className="min-w-[1160px]">
             <div className="grid grid-cols-[40px_repeat(8,minmax(0,1fr))] gap-3 border-b border-slate-200/80 bg-[linear-gradient(135deg,rgba(16,33,58,0.98),rgba(48,89,152,0.92))] px-5 py-4 text-xs font-semibold uppercase tracking-[0.22em] text-white/85">
               <div />
