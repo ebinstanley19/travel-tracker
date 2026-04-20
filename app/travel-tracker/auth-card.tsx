@@ -1,5 +1,3 @@
-import { useRef, useState } from "react";
-import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,11 +18,9 @@ interface AuthCardProps {
   onEmailChange: (email: string) => void;
   onPasswordChange: (password: string) => void;
   onForgotPassword: () => void;
-  onSubmit: (captchaToken: string) => void;
+  onSubmit: () => void;
   onGoogleSignIn: () => void;
 }
-
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 export function AuthCard({
   mode,
@@ -42,15 +38,6 @@ export function AuthCard({
   onSubmit,
   onGoogleSignIn,
 }: AuthCardProps) {
-  const turnstileRef = useRef<TurnstileInstance>(null);
-  const [captchaToken, setCaptchaToken] = useState("");
-
-  function handleSubmit() {
-    onSubmit(captchaToken);
-    turnstileRef.current?.reset();
-    setCaptchaToken("");
-  }
-
   return (
     <Card className="mx-auto w-full max-w-md overflow-hidden rounded-[2rem] border border-white/60 bg-white/80 shadow-[0_20px_80px_rgba(22,27,45,0.12)] backdrop-blur-xl">
       <div className="h-20 bg-[radial-gradient(circle_at_20%_30%,rgba(245,178,76,0.45),transparent_40%),radial-gradient(circle_at_80%_40%,rgba(77,143,255,0.35),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0.55))]" />
@@ -119,21 +106,10 @@ export function AuthCard({
         {errorMessage ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{errorMessage}</p> : null}
         {infoMessage ? <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">{infoMessage}</p> : null}
 
-        {TURNSTILE_SITE_KEY && (
-          <Turnstile
-            ref={turnstileRef}
-            siteKey={TURNSTILE_SITE_KEY}
-            onSuccess={setCaptchaToken}
-            onError={() => setCaptchaToken("")}
-            onExpire={() => setCaptchaToken("")}
-            options={{ theme: "light", size: "flexible" }}
-          />
-        )}
-
         <Button
           className="h-12 w-full rounded-2xl bg-slate-950 text-white hover:bg-slate-800"
-          onClick={handleSubmit}
-          disabled={pending || (!!TURNSTILE_SITE_KEY && !captchaToken)}
+          onClick={onSubmit}
+          disabled={pending}
         >
           {pending ? "Please wait..." : mode === "login" ? "Log in" : "Create account"}
         </Button>

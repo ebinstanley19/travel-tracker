@@ -59,7 +59,7 @@ export function useAuth() {
     };
   }, []);
 
-  async function handleAuthSubmit(captchaToken?: string): Promise<void> {
+  async function handleAuthSubmit(): Promise<void> {
     setAuthError("");
     setAuthInfo("");
 
@@ -80,7 +80,7 @@ export function useAuth() {
         const { error } = await supabase.auth.signUp({
           email: authEmail,
           password: authPassword,
-          options: { data: { full_name: authFullName.trim() }, captchaToken },
+          options: { data: { full_name: authFullName.trim() } },
         });
         if (error) {
           setAuthError(error.message);
@@ -91,7 +91,6 @@ export function useAuth() {
         const { error } = await supabase.auth.signInWithPassword({
           email: authEmail,
           password: authPassword,
-          options: { captchaToken },
         });
         if (error) {
           setAuthError(error.message);
