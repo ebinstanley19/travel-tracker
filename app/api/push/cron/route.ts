@@ -60,7 +60,8 @@ export async function GET(request: Request) {
   }
 
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY || !process.env.VAPID_SUBJECT) {
-    return Response.json({ error: "Server misconfiguration: VAPID keys not set." }, { status: 500 });
+    const missing = ["VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "VAPID_SUBJECT"].filter((k) => !process.env[k]);
+    return Response.json({ error: "Server misconfiguration: VAPID keys not set.", missing }, { status: 500 });
   }
 
   webpush.setVapidDetails(
