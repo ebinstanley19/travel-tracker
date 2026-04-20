@@ -468,10 +468,10 @@ export default function TravelHistoryTrackerApp() {
                 <ChevronDown className={`ml-auto h-4 w-4 text-slate-400 transition-transform duration-200 ${upcomingExpanded ? "rotate-180" : ""}`} />
               </button>
               <div
-                className="grid overflow-hidden transition-[grid-template-rows] duration-300 ease-out"
+                className={`grid transition-[grid-template-rows] duration-300 ease-out${upcomingExpanded ? "" : " overflow-hidden"}`}
                 style={{ gridTemplateRows: upcomingExpanded ? "1fr" : "0fr" }}
               >
-              <div className="overflow-hidden">
+              <div className="min-h-0">
               <div className="divide-y divide-slate-100">
                 {filters.upcomingEntries.map((entry) => {
                   const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
@@ -505,7 +505,7 @@ export default function TravelHistoryTrackerApp() {
                           Options <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
                         </Button>
                         {activeUpcomingOptionsId === entry.id && (
-                          <div className="absolute right-0 bottom-full z-30 mb-2 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg sm:bottom-auto sm:top-full sm:mb-0 sm:mt-2">
+                          <div className="absolute right-0 bottom-full z-50 mb-2 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
                             <Button variant="ghost" size="sm" className="h-10 w-full justify-start rounded-none px-3"
                               onClick={() => { setActiveUpcomingOptionsId(null); travelEntries.openEditModal(entry); }}>
                               <Pencil className="mr-2 h-4 w-4" /> Edit
