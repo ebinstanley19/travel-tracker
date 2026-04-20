@@ -366,12 +366,14 @@ export default function TravelHistoryTrackerApp() {
 
         <div className="animate-fade-up" style={{ animationDelay: "180ms" }}>
         <Tabs defaultValue={defaultView} className="space-y-4">
-          <TabsList className="h-auto w-full justify-start overflow-x-auto whitespace-nowrap rounded-2xl border border-slate-200/70 bg-white/80 p-1.5 backdrop-blur-sm shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
-            <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="timeline">Timeline view</TabsTrigger>
-            <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="table">Table view</TabsTrigger>
-            <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="map">Map mode</TabsTrigger>
-            <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="insights">Insights</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [-webkit-overflow-scrolling:touch]">
+            <TabsList className="h-auto min-w-max justify-start whitespace-nowrap rounded-2xl border border-slate-200/70 bg-white/80 p-1.5 backdrop-blur-sm shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+              <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="timeline">Timeline view</TabsTrigger>
+              <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="table">Table view</TabsTrigger>
+              <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="map">Map mode</TabsTrigger>
+              <TabsTrigger className="rounded-xl px-5 py-2.5 font-medium text-slate-600 data-[state=active]:bg-slate-950 data-[state=active]:text-white data-[state=active]:shadow-none" value="insights">Insights</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="timeline">
             <TimelineView

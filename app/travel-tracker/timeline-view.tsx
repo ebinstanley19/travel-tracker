@@ -194,25 +194,6 @@ export function TimelineView({
 
   return (
     <div className="space-y-6">
-      {groupedByYearMonth.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {groupedByYearMonth.map((yearBlock) => (
-            <button
-              key={yearBlock.year}
-              type="button"
-              onClick={() => {
-                setExpandedYears((prev) => ({ ...prev, [yearBlock.year]: true }));
-                setTimeout(() => {
-                  document.getElementById(`year-${yearBlock.year}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }, 50);
-              }}
-              className="rounded-full border border-slate-200 bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:bg-white hover:text-slate-900"
-            >
-              {yearBlock.year}
-            </button>
-          ))}
-        </div>
-      )}
       {groupedByYearMonth.map((yearBlock, yearIndex) => {
         const isExpanded = expandedYears[yearBlock.year] ?? yearIndex < 2;
         const yearEntryCount = yearBlock.months.reduce((total, month) => total + month.items.length, 0);
@@ -225,7 +206,6 @@ export function TimelineView({
         return (
           <Card
             key={yearBlock.year}
-            id={`year-${yearBlock.year}`}
             className="timeline-year-card overflow-hidden rounded-[2rem] border-white/60 bg-white/75 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl"
             style={{ animationDelay: `${yearIndex * 80}ms` }}
           >
