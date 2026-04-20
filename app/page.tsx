@@ -278,7 +278,7 @@ export default function TravelHistoryTrackerApp() {
                       ))}
                     </div>
                   )}
-                  {newMilestones.length > 0 && (
+                  {notifications.length > 0 && (
                     <div className="border-t border-slate-100 px-4 py-3">
                       <button type="button" onClick={clearAllNotifications} className="text-xs font-semibold text-slate-500 hover:text-slate-700">
                         Clear notifications
@@ -329,7 +329,7 @@ export default function TravelHistoryTrackerApp() {
                       ))}
                     </div>
                   )}
-                  {newMilestones.length > 0 && (
+                  {notifications.length > 0 && (
                     <div className="border-t border-slate-100 px-4 py-3">
                       <button type="button" onClick={clearAllNotifications} className="text-xs font-semibold text-slate-500 hover:text-slate-700">
                         Clear notifications
