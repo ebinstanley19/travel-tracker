@@ -55,9 +55,14 @@ export default function TravelHistoryTrackerApp() {
     } catch {}
   }, []);
 
+  const allAchievedMilestones = useMemo(
+    () => computeMilestones(travelEntries.entries).filter((m) => m.achieved),
+    [travelEntries.entries],
+  );
+
   const newMilestones = useMemo(
-    () => computeMilestones(travelEntries.entries).filter((m) => m.achieved && !seenMilestoneIds.has(m.id)),
-    [travelEntries.entries, seenMilestoneIds],
+    () => allAchievedMilestones.filter((m) => !seenMilestoneIds.has(m.id)),
+    [allAchievedMilestones, seenMilestoneIds],
   );
 
   const notifications = useMemo(() => {
@@ -73,14 +78,14 @@ export default function TravelHistoryTrackerApp() {
     for (const entry of filters.upcomingEntries) {
       const days = Math.ceil((new Date(entry.date).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
       if (days <= 7) {
-        const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+        const dest = resolveDestination(entry);
         const label = days === 0 ? `Trip to ${dest} starts today` : days === 1 ? `Trip to ${dest} tomorrow` : `Trip to ${dest} in ${days} days`;
         items.push({ id: `upcoming-${entry.id}`, icon: "🗓️", title: label, tag: "Upcoming" });
       }
       if (entry.endDate && entry.endDate !== entry.date) {
-        const nights = Math.round((new Date(entry.endDate).getTime() - new Date(entry.date).getTime()) / 86400000);
+        const nights = nightsBetween(entry.date, entry.endDate);
         if (nights >= 14) {
-          const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+          const dest = resolveDestination(entry);
           items.push({ id: `longtrip-${entry.id}`, icon: "🏕️", title: `${dest} — ${nights}-night trip ahead`, tag: "Long trip" });
         }
       }
@@ -98,8 +103,7 @@ export default function TravelHistoryTrackerApp() {
       const d = new Date(entry.date);
       if (d.getMonth() === todayMonth && d.getDate() === todayDay && d.getFullYear() !== currentYear) {
         const yearsAgo = currentYear - d.getFullYear();
-        const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
-        // Year suffix ensures the anniversary reappears each new year
+        const dest = resolveDestination(entry);
         items.push({ id: `anniversary-${entry.id}-${currentYear}`, icon: "📸", title: `${yearsAgo} year${yearsAgo !== 1 ? "s" : ""} ago today: ${dest}`, tag: "Anniversary" });
       }
     }
@@ -108,7 +112,7 @@ export default function TravelHistoryTrackerApp() {
   }, [newMilestones, filters.upcomingEntries, travelEntries.entries, dismissedNotifIds]);
 
   function clearAllNotifications() {
-    const allAchievedIds = computeMilestones(travelEntries.entries).filter((m) => m.achieved).map((m) => m.id);
+    const allAchievedIds = allAchievedMilestones.map((m) => m.id);
     const nextMilestones = new Set([...seenMilestoneIds, ...allAchievedIds]);
     setSeenMilestoneIds(nextMilestones);
     try { localStorage.setItem("routebook-seen-milestones", JSON.stringify([...nextMilestones])); } catch {}
@@ -425,7 +429,7 @@ export default function TravelHistoryTrackerApp() {
               </div>
               <div className="divide-y divide-emerald-100">
                 {filters.currentlyTravelingEntries.map((entry) => {
-                  const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+                  const dest = resolveDestination(entry);
                   const from = getCountryFromLocation(entry.from) || entry.from || "";
                   const daysLeft = Math.ceil((new Date(entry.endDate!).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
                   return (
@@ -474,7 +478,7 @@ export default function TravelHistoryTrackerApp() {
               <div className="min-h-0">
               <div className="divide-y divide-slate-100">
                 {filters.upcomingEntries.map((entry) => {
-                  const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+                  const dest = resolveDestination(entry);
                   const from = getCountryFromLocation(entry.from) || entry.from || "";
                   const days = Math.ceil((new Date(entry.date).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
                   const badge =
@@ -605,7 +609,6 @@ export default function TravelHistoryTrackerApp() {
         />
       </div>
 
-      {/* Mobile bottom nav */}
       <div className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-slate-200 bg-white/95 backdrop-blur-xl md:hidden">
         <button
           className="flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium text-slate-600 active:bg-slate-50"
@@ -638,7 +641,6 @@ export default function TravelHistoryTrackerApp() {
         </button>
       </div>
 
-      {/* Mobile settings panel */}
       {settingsOpen ? (
         <div className="md:hidden">
           <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setSettingsOpen(false)} />
@@ -677,9 +679,8 @@ export default function TravelHistoryTrackerApp() {
   );
 }
 
-// Inline insights component for the tab — lightweight version linking to the full page
 import type { TravelEntry } from "@/app/travel-tracker/types";
-import { getCountryFromLocation, prettyDate } from "@/app/travel-tracker/utils";
+import { getCountryFromLocation, nightsBetween, prettyDate, resolveDestination } from "@/app/travel-tracker/utils";
 import { CONTINENT_MAP } from "@/app/travel-tracker/continents";
 
 function InsightsInline({ entries }: { entries: TravelEntry[] }) {

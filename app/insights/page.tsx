@@ -9,8 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CONTINENT_MAP } from "@/app/travel-tracker/continents";
 import { computeMilestones } from "@/app/travel-tracker/milestones";
 import { supabase } from "@/lib/supabase";
-import { getEntryCountries, prettyDate } from "@/app/travel-tracker/utils";
-import { getCountryFromLocation } from "@/app/travel-tracker/utils";
+import { getCountryFromLocation, getEntryCountries, prettyDate } from "@/app/travel-tracker/utils";
 import type { TravelEntry } from "@/app/travel-tracker/types";
 
 interface InsightStats {

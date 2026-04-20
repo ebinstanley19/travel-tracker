@@ -35,16 +35,15 @@ export function usePushNotifications(user: User | null) {
 
   useEffect(() => {
     if (!user || typeof window === "undefined" || !("serviceWorker" in navigator)) return;
-
+    let cancelled = false;
     void (async () => {
       try {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
-        setSubscribed(!!sub);
-      } catch {
-        // SW not ready yet — ignore
-      }
+        if (!cancelled) setSubscribed(!!sub);
+      } catch {}
     })();
+    return () => { cancelled = true; };
   }, [user]);
 
   const subscribe = useCallback(async () => {

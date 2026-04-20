@@ -70,6 +70,14 @@ export function getCountryFromLocation(value: string): string {
   return parts[1]?.trim() ?? "";
 }
 
+export function resolveDestination(entry: TravelEntry): string {
+  return getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+}
+
+export function nightsBetween(start: string, end: string): number {
+  return Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000);
+}
+
 export function getEntryCountries(entry: TravelEntry): string[] {
   const fromCountry = getCountryFromLocation(entry.from);
   const toCountry = getCountryFromLocation(entry.to);

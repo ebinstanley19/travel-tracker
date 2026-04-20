@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import webpush from "web-push";
-import { getCountryFromLocation } from "@/app/travel-tracker/date-utils";
+import { resolveDestination } from "@/app/travel-tracker/date-utils";
 import type { TravelEntry } from "@/app/travel-tracker/types";
 
 interface PushSubscription {
@@ -8,6 +8,19 @@ interface PushSubscription {
   endpoint: string;
   p256dh: string;
   auth: string;
+}
+
+function mapRecord(r: Record<string, unknown>): TravelEntry {
+  return {
+    id: r.id as string,
+    date: (r.date as string | null) ?? "",
+    endDate: (r.end_date as string | null) ?? "",
+    from: (r.from as string | null) ?? "",
+    to: (r.to as string | null) ?? "",
+    country: (r.country as string | null) ?? "",
+    purpose: (r.purpose as string | null) ?? "",
+    notes: (r.notes as string | null) ?? "",
+  };
 }
 
 function buildNotifications(entries: TravelEntry[], todayStr: string): { title: string; body: string; tag: string }[] {
@@ -23,7 +36,7 @@ function buildNotifications(entries: TravelEntry[], todayStr: string): { title: 
   const notifications: { title: string; body: string; tag: string }[] = [];
 
   for (const entry of entries) {
-    const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+    const dest = resolveDestination(entry);
 
     if (entry.date === todayStr) {
       notifications.push({ title: "Route Book", body: `Your trip to ${dest} starts today ✈️`, tag: `start-${entry.id}` });
@@ -84,57 +97,57 @@ export async function GET(request: Request) {
     return Response.json({ success: true, sent: 0, skipped: 0 });
   }
 
+  const subs = subscriptions as PushSubscription[];
+  const uniqueUserIds = [...new Set(subs.map((s) => s.user_id))];
+
+  const { data: allRecords } = await adminClient
+    .from("travel_records")
+    .select("*")
+    .in("user_id", uniqueUserIds);
+
+  const recordsByUser = new Map<string, TravelEntry[]>();
+  for (const r of allRecords ?? []) {
+    const userId = r.user_id as string;
+    if (!recordsByUser.has(userId)) recordsByUser.set(userId, []);
+    recordsByUser.get(userId)!.push(mapRecord(r as Record<string, unknown>));
+  }
+
   const todayStr = new Date().toISOString().split("T")[0];
   let sent = 0;
   let skipped = 0;
 
-  const uniqueUserIds = [...new Set((subscriptions as PushSubscription[]).map((s) => s.user_id))];
+  const sends: Promise<void>[] = [];
 
   for (const userId of uniqueUserIds) {
-    const { data: records } = await adminClient
-      .from("travel_records")
-      .select("*")
-      .eq("user_id", userId);
-
-    if (!records || records.length === 0) { skipped++; continue; }
-
-    const entries: TravelEntry[] = records.map((r) => ({
-      id: r.id as string,
-      date: (r.date as string | null) ?? "",
-      endDate: (r.end_date as string | null) ?? "",
-      from: (r.from as string | null) ?? "",
-      to: (r.to as string | null) ?? "",
-      country: (r.country as string | null) ?? "",
-      purpose: (r.purpose as string | null) ?? "",
-      notes: (r.notes as string | null) ?? "",
-    }));
+    const entries = recordsByUser.get(userId);
+    if (!entries || entries.length === 0) { skipped++; continue; }
 
     const notifications = buildNotifications(entries, todayStr);
     if (notifications.length === 0) { skipped++; continue; }
 
-    const userSubs = (subscriptions as PushSubscription[]).filter((s) => s.user_id === userId);
+    const userSubs = subs.filter((s) => s.user_id === userId);
 
     for (const sub of userSubs) {
       for (const notif of notifications) {
-        try {
-          await webpush.sendNotification(
+        sends.push(
+          webpush.sendNotification(
             { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
             JSON.stringify({ title: notif.title, body: notif.body, tag: notif.tag, icon: "/icon-192.png" }),
-          );
-          sent++;
-        } catch (err: unknown) {
-          const status = (err as { statusCode?: number }).statusCode;
-          if (status === 404 || status === 410) {
-            // Subscription expired — remove it
-            await adminClient.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
-          } else {
-            console.error(`push/cron: failed for user ${userId}:`, err);
-          }
-          skipped++;
-        }
+          ).then(() => { sent++; }).catch(async (err: unknown) => {
+            const status = (err as { statusCode?: number }).statusCode;
+            if (status === 404 || status === 410) {
+              await adminClient.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+            } else {
+              console.error(`push/cron: failed for user ${userId}:`, err);
+            }
+            skipped++;
+          })
+        );
       }
     }
   }
+
+  await Promise.all(sends);
 
   console.log(`push/cron: sent=${sent} skipped=${skipped}`);
   return Response.json({ success: true, sent, skipped });
