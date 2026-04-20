@@ -29,6 +29,7 @@ export default function TravelHistoryTrackerApp() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
+  const filtersRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
@@ -223,7 +224,7 @@ export default function TravelHistoryTrackerApp() {
           />
         </div>
 
-        <div className={`animate-fade-up md:block${filtersOpen ? " block" : " hidden"}`} style={{ animationDelay: "120ms" }}>
+        <div ref={filtersRef} className={`animate-fade-up md:block${filtersOpen ? " block" : " hidden"}`} style={{ animationDelay: "120ms" }}>
           <FiltersCard
             search={filters.search}
             countryFilter={filters.countryFilter}
@@ -309,7 +310,12 @@ export default function TravelHistoryTrackerApp() {
         </button>
         <button
           className={`flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium active:bg-slate-50 ${filtersOpen ? "text-slate-950" : "text-slate-600"}`}
-          onClick={() => setFiltersOpen((prev) => !prev)}
+          onClick={() => {
+            setFiltersOpen((prev) => {
+              if (!prev) setTimeout(() => filtersRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+              return !prev;
+            });
+          }}
         >
           <Search className="h-5 w-5" /> Search
         </button>
