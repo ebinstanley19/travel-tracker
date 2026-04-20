@@ -42,8 +42,8 @@ export function EntryDialog({
           <DialogTitle>{editingId ? "Edit travel entry" : "Add travel entry"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="min-w-0 space-y-1.5">
               <Label>From date</Label>
               <div className="relative">
                 <Input
@@ -64,7 +64,7 @@ export function EntryDialog({
                 )}
               </div>
             </div>
-            <div className="space-y-1.5">
+            <div className="min-w-0 space-y-1.5">
               <Label>To date</Label>
               <div className="relative">
                 <Input
