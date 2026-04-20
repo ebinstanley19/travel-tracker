@@ -64,7 +64,7 @@ function VisaModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/60 bg-white shadow-2xl">
+      <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-white/60 bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-100 p-5">
           <h2 className="text-lg font-semibold">{editingId ? "Edit visa record" : "Add visa record"}</h2>
           <button type="button" onClick={onClose} className="rounded-lg p-1 hover:bg-slate-100">
@@ -95,13 +95,13 @@ function VisaModal({
             />
           </div>
           <div className="grid gap-3">
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Label>Entry date</Label>
-              <Input type="date" value={form.entryDate} onChange={(e) => onChange({ ...form, entryDate: e.target.value })} className="w-full" />
+              <Input type="date" value={form.entryDate} onChange={(e) => onChange({ ...form, entryDate: e.target.value })} className="w-full min-w-0" />
             </div>
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Label>Exit date</Label>
-              <Input type="date" value={form.exitDate} onChange={(e) => onChange({ ...form, exitDate: e.target.value })} className="w-full" />
+              <Input type="date" value={form.exitDate} onChange={(e) => onChange({ ...form, exitDate: e.target.value })} className="w-full min-w-0" />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -117,7 +117,7 @@ function VisaModal({
             </div>
             <div className="min-w-0 space-y-2">
               <Label>Visa expiry date</Label>
-              <Input type="date" value={form.expiryDate} onChange={(e) => onChange({ ...form, expiryDate: e.target.value })} className="w-full" />
+              <Input type="date" value={form.expiryDate} onChange={(e) => onChange({ ...form, expiryDate: e.target.value })} className="w-full min-w-0" />
             </div>
           </div>
           <div className="space-y-2">

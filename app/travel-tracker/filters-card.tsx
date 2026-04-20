@@ -119,21 +119,45 @@ export function FiltersCard({
           </div>
           <div className="col-span-2 sm:flex-1 min-w-0">
             <Label className={labelCls}>From date</Label>
-            <Input
-              type="date"
-              value={fromDateFilter}
-              onChange={(e) => onFromDateChange(e.target.value)}
-              className={controlCls}
-            />
+            <div className="mt-2 flex min-w-0 items-center gap-1">
+              <Input
+                type="date"
+                value={fromDateFilter}
+                onChange={(e) => onFromDateChange(e.target.value)}
+                className="h-11 min-w-0 flex-1 rounded-2xl border-slate-200/80 bg-white/80 shadow-none"
+              />
+              {fromDateFilter && (
+                <button
+                  type="button"
+                  onClick={() => onFromDateChange("")}
+                  className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  aria-label="Clear from date"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
           <div className="col-span-2 sm:flex-1 min-w-0">
             <Label className={labelCls}>To date</Label>
-            <Input
-              type="date"
-              value={toDateFilter}
-              onChange={(e) => onToDateChange(e.target.value)}
-              className={controlCls}
-            />
+            <div className="mt-2 flex min-w-0 items-center gap-1">
+              <Input
+                type="date"
+                value={toDateFilter}
+                onChange={(e) => onToDateChange(e.target.value)}
+                className="h-11 min-w-0 flex-1 rounded-2xl border-slate-200/80 bg-white/80 shadow-none"
+              />
+              {toDateFilter && (
+                <button
+                  type="button"
+                  onClick={() => onToDateChange("")}
+                  className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  aria-label="Clear to date"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

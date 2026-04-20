@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -44,21 +45,45 @@ export function EntryDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="min-w-0 space-y-1.5">
               <Label>From date</Label>
-              <Input
-                type="date"
-                value={form.date}
-                onChange={(e) => onFormChange({ ...form, date: e.target.value })}
-                className="h-11 w-full"
-              />
+              <div className="flex min-w-0 items-center gap-1">
+                <Input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => onFormChange({ ...form, date: e.target.value })}
+                  className="h-11 min-w-0 flex-1"
+                />
+                {form.date && (
+                  <button
+                    type="button"
+                    onClick={() => onFormChange({ ...form, date: "" })}
+                    className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    aria-label="Clear from date"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="min-w-0 space-y-1.5">
               <Label>To date</Label>
-              <Input
-                type="date"
-                value={form.endDate}
-                onChange={(e) => onFormChange({ ...form, endDate: e.target.value })}
-                className="h-11 w-full"
-              />
+              <div className="flex min-w-0 items-center gap-1">
+                <Input
+                  type="date"
+                  value={form.endDate}
+                  onChange={(e) => onFormChange({ ...form, endDate: e.target.value })}
+                  className="h-11 min-w-0 flex-1"
+                />
+                {form.endDate && (
+                  <button
+                    type="button"
+                    onClick={() => onFormChange({ ...form, endDate: "" })}
+                    className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    aria-label="Clear to date"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
