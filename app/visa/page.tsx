@@ -64,14 +64,14 @@ function VisaModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-white/60 bg-white shadow-2xl">
+      <div className="relative z-10 min-w-0 w-full max-w-lg overflow-hidden rounded-2xl border border-white/60 bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-100 p-5">
           <h2 className="text-lg font-semibold">{editingId ? "Edit visa record" : "Add visa record"}</h2>
           <button type="button" onClick={onClose} className="rounded-lg p-1 hover:bg-slate-100">
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="space-y-4 p-5">
+        <div className="space-y-4 overflow-hidden p-5">
           <div className="space-y-2">
             <Label>Country</Label>
             <Select value={form.country || "none"} onValueChange={(v) => onChange({ ...form, country: v === "none" ? "" : v })}>
