@@ -133,19 +133,19 @@ export default function TravelHistoryTrackerApp() {
   return (
     <div className="min-h-screen p-4 pb-24 md:p-8 md:pb-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-3 rounded-3xl bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between md:p-6">
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <img src={logoSrc} alt="Route Book logo" className="h-4 w-4 rounded-sm" /> Route Book
             </div>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight">
+            <h1 className="mt-1 text-xl font-bold tracking-tight md:mt-2 md:text-3xl">
               {greeting}, {auth.user?.user_metadata?.full_name?.split(" ")[0] ?? auth.user?.email?.split("@")[0]}.
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            <p className="mt-1 hidden max-w-2xl text-sm text-muted-foreground md:mt-2 md:block">
               {insightLine}
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="hidden flex-wrap gap-3 md:flex">
             <Button onClick={travelEntries.openNewModal}>
               <Plus className="mr-2 h-4 w-4" /> Add entry
             </Button>
@@ -167,49 +167,19 @@ export default function TravelHistoryTrackerApp() {
                     </p>
                     <p className="truncate text-xs text-slate-500">{auth.user?.email}</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    className="h-11 w-full justify-start rounded-none px-3"
-                    onClick={() => { setSettingsOpen(false); downloadImportTemplate(); }}
-                  >
+                  <Button variant="ghost" className="h-11 w-full justify-start rounded-none px-3" onClick={() => { setSettingsOpen(false); downloadImportTemplate(); }}>
                     <Download className="mr-2 h-4 w-4" /> Download template
                   </Button>
-                  <Button
-                    asChild
-                    variant="ghost"
-                    className="h-11 w-full justify-start rounded-none px-3"
-                    onClick={() => setSettingsOpen(false)}
-                  >
-                    <Link href="/help">
-                      <HelpCircle className="mr-2 h-4 w-4" /> Help
-                    </Link>
+                  <Button asChild variant="ghost" className="h-11 w-full justify-start rounded-none px-3" onClick={() => setSettingsOpen(false)}>
+                    <Link href="/help"><HelpCircle className="mr-2 h-4 w-4" /> Help</Link>
                   </Button>
-                  <Button
-                    asChild
-                    variant="ghost"
-                    className="h-11 w-full justify-start rounded-none px-3"
-                    onClick={() => setSettingsOpen(false)}
-                  >
-                    <Link href="/visa">
-                      <UserCircle2 className="mr-2 h-4 w-4" /> Visa tracker
-                    </Link>
+                  <Button asChild variant="ghost" className="h-11 w-full justify-start rounded-none px-3" onClick={() => setSettingsOpen(false)}>
+                    <Link href="/visa"><UserCircle2 className="mr-2 h-4 w-4" /> Visa tracker</Link>
                   </Button>
-                  <Button
-                    asChild
-                    variant="ghost"
-                    className="h-11 w-full justify-start rounded-none px-3"
-                    onClick={() => setSettingsOpen(false)}
-                  >
-                    <Link href="/profile">
-                      <UserCircle2 className="mr-2 h-4 w-4" /> Profile
-                    </Link>
+                  <Button asChild variant="ghost" className="h-11 w-full justify-start rounded-none px-3" onClick={() => setSettingsOpen(false)}>
+                    <Link href="/profile"><UserCircle2 className="mr-2 h-4 w-4" /> Profile</Link>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    className="h-11 w-full justify-start rounded-none px-3 text-red-600 hover:text-red-700"
-                    onClick={() => { setSettingsOpen(false); void auth.handleSignOut(); }}
-                    disabled={auth.authPending}
-                  >
+                  <Button variant="ghost" className="h-11 w-full justify-start rounded-none px-3 text-red-600 hover:text-red-700" onClick={() => { setSettingsOpen(false); void auth.handleSignOut(); }} disabled={auth.authPending}>
                     <LogOut className="mr-2 h-4 w-4" /> {auth.authPending ? "Logging out..." : "Log out"}
                   </Button>
                 </div>
@@ -322,12 +292,63 @@ export default function TravelHistoryTrackerApp() {
         />
       </div>
 
-      <Button
-        className="fixed bottom-5 right-5 h-12 rounded-full px-5 shadow-xl md:hidden"
-        onClick={travelEntries.openNewModal}
-      >
-        <Plus className="mr-2 h-4 w-4" /> Quick add
-      </Button>
+      {/* Mobile bottom nav */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-slate-200 bg-white/95 backdrop-blur-xl md:hidden">
+        <button
+          className="flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium text-slate-600 active:bg-slate-50"
+          onClick={travelEntries.openNewModal}
+        >
+          <Plus className="h-5 w-5" /> Add
+        </button>
+        <button
+          className="flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium text-slate-600 active:bg-slate-50"
+          onClick={() => exportToExcel(travelEntries.entries)}
+        >
+          <Download className="h-5 w-5" /> Export
+        </button>
+        <button
+          className="flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium text-slate-600 active:bg-slate-50"
+          onClick={triggerImport}
+        >
+          <Upload className="h-5 w-5" /> Import
+        </button>
+        <button
+          className="flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium text-slate-600 active:bg-slate-50"
+          onClick={() => setSettingsOpen((prev) => !prev)}
+        >
+          <Settings className="h-5 w-5" /> Settings
+        </button>
+      </div>
+
+      {/* Mobile settings panel */}
+      {settingsOpen ? (
+        <div className="md:hidden">
+          <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setSettingsOpen(false)} />
+          <div className="fixed bottom-16 left-2 right-2 z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+            <div className="border-b border-slate-100 px-4 py-3">
+              <p className="truncate text-sm font-semibold text-slate-800">
+                {auth.user?.user_metadata?.full_name ?? auth.user?.email?.split("@")[0]}
+              </p>
+              <p className="truncate text-xs text-slate-500">{auth.user?.email}</p>
+            </div>
+            <Button variant="ghost" className="h-12 w-full justify-start rounded-none px-4" onClick={() => { setSettingsOpen(false); downloadImportTemplate(); }}>
+              <Download className="mr-2 h-4 w-4" /> Download template
+            </Button>
+            <Button asChild variant="ghost" className="h-12 w-full justify-start rounded-none px-4" onClick={() => setSettingsOpen(false)}>
+              <Link href="/help"><HelpCircle className="mr-2 h-4 w-4" /> Help</Link>
+            </Button>
+            <Button asChild variant="ghost" className="h-12 w-full justify-start rounded-none px-4" onClick={() => setSettingsOpen(false)}>
+              <Link href="/visa"><UserCircle2 className="mr-2 h-4 w-4" /> Visa tracker</Link>
+            </Button>
+            <Button asChild variant="ghost" className="h-12 w-full justify-start rounded-none px-4" onClick={() => setSettingsOpen(false)}>
+              <Link href="/profile"><UserCircle2 className="mr-2 h-4 w-4" /> Profile</Link>
+            </Button>
+            <Button variant="ghost" className="h-12 w-full justify-start rounded-none px-4 text-red-600 hover:text-red-700" onClick={() => { setSettingsOpen(false); void auth.handleSignOut(); }} disabled={auth.authPending}>
+              <LogOut className="mr-2 h-4 w-4" /> {auth.authPending ? "Logging out..." : "Log out"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
