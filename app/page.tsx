@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, BellRing, ChevronDown, Download, HelpCircle, LogOut, Pencil, Plane, Plus, Search, Settings, Trash2, Upload, UserCircle2 } from "lucide-react";
+import { Bell, BellRing, ChevronDown, Download, HelpCircle, LogOut, MoreHorizontal, Pencil, Plane, Plus, Search, Settings, Trash2, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -502,11 +502,11 @@ export default function TravelHistoryTrackerApp() {
                       <div className="relative shrink-0" data-upcoming-options-menu>
                         <Button
                           variant="outline"
-                          size="sm"
-                          className="rounded-xl border-slate-200 bg-white/90"
+                          size="icon"
+                          className="h-8 w-8 rounded-xl border-slate-200 bg-white/90"
                           onClick={() => setActiveUpcomingOptionsId(activeUpcomingOptionsId === entry.id ? null : entry.id)}
                         >
-                          Options <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
                         {activeUpcomingOptionsId === entry.id && (
                           <div className="absolute right-0 bottom-full z-50 mb-2 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
