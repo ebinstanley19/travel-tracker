@@ -13,11 +13,14 @@ If this app is useful to you, consider supporting it — any amount helps.
 ## Features
 
 - Add trips with date ranges, origin, destination, and notes
-- Timeline view grouped by year and month
-- Table view with sortable columns and bulk delete
+- Timeline view grouped by year and month — current year auto-expands
+- Table view with sortable columns and bulk delete; compact card layout on mobile
 - Interactive map with country bubbles sized by visit count
-- Insights tab with travel statistics
-- Filter by country, year, or free-text search
+- Insights tab with travel statistics and 25 milestone badges
+- Upcoming trips section with countdown and per-trip options
+- Currently traveling banner when today falls within an active trip's date range
+- Notification bell — milestones, upcoming reminders, long trips, data gaps, travel anniversaries
+- Filter by country, year, date range, or free-text search
 - Import trips from Excel (.xlsx) or CSV
 - Export full history to Excel
 - Four colour themes: Sand, Ocean, Sunset, White

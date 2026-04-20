@@ -164,14 +164,15 @@ export function TimelineView({
   const dateFormat = useDateFormat();
 
   useEffect(() => {
+    const currentYear = String(new Date().getFullYear());
     setExpandedYears((prev) => {
       const next: Record<string, boolean> = {};
-      groupedByYearMonth.forEach((yearBlock, index) => {
+      groupedByYearMonth.forEach((yearBlock) => {
         if (yearBlock.year in prev) {
           next[yearBlock.year] = prev[yearBlock.year];
           return;
         }
-        next[yearBlock.year] = index < 2;
+        next[yearBlock.year] = yearBlock.year === currentYear;
       });
       return next;
     });
@@ -195,7 +196,7 @@ export function TimelineView({
   return (
     <div className="space-y-6">
       {groupedByYearMonth.map((yearBlock, yearIndex) => {
-        const isExpanded = expandedYears[yearBlock.year] ?? yearIndex < 2;
+        const isExpanded = expandedYears[yearBlock.year] ?? yearBlock.year === String(new Date().getFullYear());
         const yearEntryCount = yearBlock.months.reduce((total, month) => total + month.items.length, 0);
         const yearNights = yearBlock.months.reduce((total, month) =>
           total + month.items.reduce((t, entry) => {

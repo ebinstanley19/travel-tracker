@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Download, HelpCircle, LogOut, Pencil, Plane, Plus, Search, Settings, Trash2, Upload, UserCircle2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Bell, ChevronDown, Download, HelpCircle, LogOut, Pencil, Plane, Plus, Search, Settings, Trash2, Upload, UserCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { computeMilestones } from "@/app/travel-tracker/milestones";
 import { AuthCard } from "@/app/travel-tracker/auth-card";
 import { EntryDialog } from "@/app/travel-tracker/entry-dialog";
 import { FiltersCard } from "@/app/travel-tracker/filters-card";
@@ -31,10 +32,79 @@ export default function TravelHistoryTrackerApp() {
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
   const settingsMobilePanelRef = useRef<HTMLDivElement | null>(null);
   const filtersRef = useRef<HTMLDivElement | null>(null);
+  const notifRef = useRef<HTMLDivElement | null>(null);
+  const notifMobileRef = useRef<HTMLDivElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const [activeUpcomingOptionsId, setActiveUpcomingOptionsId] = useState<string | null>(null);
   const [upcomingExpanded, setUpcomingExpanded] = useState(true);
+  const [seenMilestoneIds, setSeenMilestoneIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("routebook-seen-milestones");
+      if (stored) setSeenMilestoneIds(new Set(JSON.parse(stored) as string[]));
+    } catch {}
+  }, []);
+
+  const newMilestones = useMemo(
+    () => computeMilestones(travelEntries.entries).filter((m) => m.achieved && !seenMilestoneIds.has(m.id)),
+    [travelEntries.entries, seenMilestoneIds],
+  );
+
+  const notifications = useMemo(() => {
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const items: { id: string; icon: string; title: string; tag: string }[] = [];
+
+    for (const m of newMilestones) {
+      items.push({ id: `milestone-${m.id}`, icon: m.icon, title: m.label, tag: "Milestone" });
+    }
+
+    for (const entry of filters.upcomingEntries) {
+      const days = Math.ceil((new Date(entry.date).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
+      if (days <= 7) {
+        const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+        const label = days === 0 ? `Trip to ${dest} starts today` : days === 1 ? `Trip to ${dest} tomorrow` : `Trip to ${dest} in ${days} days`;
+        items.push({ id: `upcoming-${entry.id}`, icon: "🗓️", title: label, tag: "Upcoming" });
+      }
+      if (entry.endDate && entry.endDate !== entry.date) {
+        const nights = Math.round((new Date(entry.endDate).getTime() - new Date(entry.date).getTime()) / 86400000);
+        if (nights >= 14) {
+          const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+          items.push({ id: `longtrip-${entry.id}`, icon: "🏕️", title: `${dest} — ${nights}-night trip ahead`, tag: "Long trip" });
+        }
+      }
+    }
+
+    const incomplete = travelEntries.entries.filter((e) => (!e.date || e.date <= todayStr) && !e.endDate);
+    if (incomplete.length > 0) {
+      items.push({ id: "incomplete", icon: "⚠️", title: `${incomplete.length} past entr${incomplete.length !== 1 ? "ies" : "y"} missing an end date`, tag: "Data" });
+    }
+
+    const todayMonth = today.getMonth();
+    const todayDay = today.getDate();
+    const currentYear = today.getFullYear();
+    for (const entry of travelEntries.entries) {
+      if (!entry.date || entry.date > todayStr) continue;
+      const d = new Date(entry.date);
+      if (d.getMonth() === todayMonth && d.getDate() === todayDay && d.getFullYear() !== currentYear) {
+        const yearsAgo = currentYear - d.getFullYear();
+        const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
+        items.push({ id: `anniversary-${entry.id}`, icon: "📸", title: `${yearsAgo} year${yearsAgo !== 1 ? "s" : ""} ago today: ${dest}`, tag: "Anniversary" });
+      }
+    }
+
+    return items;
+  }, [newMilestones, filters.upcomingEntries, travelEntries.entries]);
+
+  function markMilestonesSeen() {
+    const allAchievedIds = computeMilestones(travelEntries.entries).filter((m) => m.achieved).map((m) => m.id);
+    const next = new Set([...seenMilestoneIds, ...allAchievedIds]);
+    setSeenMilestoneIds(next);
+    try { localStorage.setItem("routebook-seen-milestones", JSON.stringify([...next])); } catch {}
+  }
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
 
   const greeting = (() => {
@@ -69,6 +139,12 @@ export default function TravelHistoryTrackerApp() {
         !settingsMobilePanelRef.current?.contains(target)
       ) {
         setSettingsOpen(false);
+      }
+      if (
+        !notifRef.current?.contains(target) &&
+        !notifMobileRef.current?.contains(target)
+      ) {
+        setNotifOpen(false);
       }
       if (!target.closest("[data-upcoming-options-menu]")) {
         setActiveUpcomingOptionsId(null);
@@ -146,16 +222,59 @@ export default function TravelHistoryTrackerApp() {
     <div className="min-h-screen p-4 pb-24 md:p-8 md:pb-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-3 rounded-3xl bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between md:p-6">
-          <div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <img src={logoSrc} alt="Route Book logo" className="h-4 w-4 rounded-sm" /> Route Book
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <img src={logoSrc} alt="Route Book logo" className="h-4 w-4 rounded-sm" /> Route Book
+              </div>
+              <h1 className="mt-1 text-xl font-bold tracking-tight md:mt-2 md:text-3xl">
+                {greeting}, {auth.user?.user_metadata?.full_name?.split(" ")[0] ?? auth.user?.email?.split("@")[0]}.
+              </h1>
+              <p className="mt-1 hidden max-w-2xl text-sm text-muted-foreground md:mt-2 md:block">
+                {insightLine}
+              </p>
             </div>
-            <h1 className="mt-1 text-xl font-bold tracking-tight md:mt-2 md:text-3xl">
-              {greeting}, {auth.user?.user_metadata?.full_name?.split(" ")[0] ?? auth.user?.email?.split("@")[0]}.
-            </h1>
-            <p className="mt-1 hidden max-w-2xl text-sm text-muted-foreground md:mt-2 md:block">
-              {insightLine}
-            </p>
+            {/* Mobile bell */}
+            <div className="relative shrink-0 md:hidden" ref={notifMobileRef}>
+              <Button variant="outline" size="icon" className="relative rounded-xl" onClick={() => setNotifOpen((prev) => !prev)} aria-label="Notifications">
+                <Bell className="h-4 w-4" />
+                {notifications.length > 0 && (
+                  <span className="pointer-events-none absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-950 text-[10px] font-bold text-white">
+                    {notifications.length}
+                  </span>
+                )}
+              </Button>
+              {notifOpen && (
+                <div className="absolute right-0 top-full z-30 mt-2 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                    <p className="text-sm font-semibold text-slate-800">Notifications</p>
+                    {notifications.length > 0 && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{notifications.length}</span>}
+                  </div>
+                  {notifications.length === 0 ? (
+                    <p className="px-4 py-5 text-center text-sm text-slate-400">You&apos;re all caught up ✓</p>
+                  ) : (
+                    <div className="max-h-72 divide-y divide-slate-100 overflow-y-auto">
+                      {notifications.map((n) => (
+                        <div key={n.id} className="flex items-start gap-3 px-4 py-3">
+                          <span className="mt-0.5 text-base">{n.icon}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-slate-800">{n.title}</p>
+                            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{n.tag}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {newMilestones.length > 0 && (
+                    <div className="border-t border-slate-100 px-4 py-3">
+                      <button type="button" onClick={markMilestonesSeen} className="text-xs font-semibold text-slate-500 hover:text-slate-700">
+                        Clear notifications
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           <div className="hidden flex-wrap gap-3 md:flex">
             <Button onClick={travelEntries.openNewModal}>
@@ -167,6 +286,46 @@ export default function TravelHistoryTrackerApp() {
             <Button variant="outline" onClick={triggerImport}>
               <Upload className="mr-2 h-4 w-4" /> Import Excel
             </Button>
+            <div className="relative" ref={notifRef}>
+              <Button variant="outline" size="icon" className="relative rounded-xl" onClick={() => setNotifOpen((prev) => !prev)} aria-label="Notifications">
+                <Bell className="h-4 w-4" />
+                {notifications.length > 0 && (
+                  <span className="pointer-events-none absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-950 text-[10px] font-bold text-white">
+                    {notifications.length}
+                  </span>
+                )}
+              </Button>
+              {notifOpen && (
+                <div className="absolute right-0 top-full z-30 mt-2 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                    <p className="text-sm font-semibold text-slate-800">Notifications</p>
+                    {notifications.length > 0 && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{notifications.length}</span>}
+                  </div>
+                  {notifications.length === 0 ? (
+                    <p className="px-4 py-5 text-center text-sm text-slate-400">You&apos;re all caught up ✓</p>
+                  ) : (
+                    <div className="max-h-72 divide-y divide-slate-100 overflow-y-auto">
+                      {notifications.map((n) => (
+                        <div key={n.id} className="flex items-start gap-3 px-4 py-3">
+                          <span className="mt-0.5 text-base">{n.icon}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-slate-800">{n.title}</p>
+                            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{n.tag}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {newMilestones.length > 0 && (
+                    <div className="border-t border-slate-100 px-4 py-3">
+                      <button type="button" onClick={markMilestonesSeen} className="text-xs font-semibold text-slate-500 hover:text-slate-700">
+                        Clear notifications
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             <div className="relative" ref={settingsMenuRef}>
               <Button variant="outline" onClick={() => setSettingsOpen((prev) => !prev)}>
                 <Settings className="mr-2 h-4 w-4" /> Settings <ChevronDown className="ml-2 h-4 w-4" />

@@ -7,6 +7,7 @@ import { ArrowLeft, Award, Globe, Map, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CONTINENT_MAP } from "@/app/travel-tracker/continents";
+import { computeMilestones } from "@/app/travel-tracker/milestones";
 import { supabase } from "@/lib/supabase";
 import { getEntryCountries, prettyDate } from "@/app/travel-tracker/utils";
 import { getCountryFromLocation } from "@/app/travel-tracker/utils";
@@ -135,30 +136,6 @@ function computeStats(entries: TravelEntry[]): InsightStats {
   };
 }
 
-interface Milestone {
-  label: string;
-  achieved: boolean;
-  icon: string;
-}
-
-function getMilestones(stats: InsightStats): Milestone[] {
-  return [
-    { label: "10 trips", achieved: stats.totalTrips >= 10, icon: "✈️" },
-    { label: "25 trips", achieved: stats.totalTrips >= 25, icon: "✈️" },
-    { label: "50 trips", achieved: stats.totalTrips >= 50, icon: "✈️" },
-    { label: "100 trips", achieved: stats.totalTrips >= 100, icon: "🚀" },
-    { label: "5 countries", achieved: stats.uniqueCountries >= 5, icon: "🌍" },
-    { label: "10 countries", achieved: stats.uniqueCountries >= 10, icon: "🌍" },
-    { label: "25 countries", achieved: stats.uniqueCountries >= 25, icon: "🌍" },
-    { label: "50 countries", achieved: stats.uniqueCountries >= 50, icon: "🌏" },
-    { label: "3 continents", achieved: stats.uniqueContinents >= 3, icon: "🗺️" },
-    { label: "5 continents", achieved: stats.uniqueContinents >= 5, icon: "🗺️" },
-    { label: "All 6 continents", achieved: stats.uniqueContinents >= 6, icon: "🌐" },
-    { label: "3 years of travel", achieved: stats.yearsCovered >= 3, icon: "📅" },
-    { label: "5 years of travel", achieved: stats.yearsCovered >= 5, icon: "📅" },
-    { label: "10 years of travel", achieved: stats.yearsCovered >= 10, icon: "🏆" },
-  ];
-}
 
 function HorizBar({ value, max, color = "bg-slate-800" }: { value: number; max: number; color?: string }) {
   const pct = max > 0 ? Math.max(2, Math.round((value / max) * 100)) : 0;
@@ -216,7 +193,7 @@ export default function InsightsPage() {
   }
 
   const stats = computeStats(entries);
-  const milestones = getMilestones(stats);
+  const milestones = computeMilestones(entries);
   const maxYearCount = Math.max(...stats.tripsByYear.map((y) => y.count), 1);
   const maxCountryCount = Math.max(...stats.topCountries.map((c) => c.count), 1);
   const maxMonthCount = Math.max(...stats.tripsByMonth.map((m) => m.count), 1);
@@ -397,9 +374,9 @@ export default function InsightsPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {milestones.map(({ label, achieved, icon }) => (
+              {milestones.map(({ id, label, achieved, icon }) => (
                 <div
-                  key={label}
+                  key={id}
                   className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
                     achieved
                       ? "border-emerald-200 bg-emerald-50 text-emerald-800"

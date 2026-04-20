@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Download, Map, PlusCircle, Search, Settings, Shield, Pencil, LayoutList } from "lucide-react";
+import { ArrowLeft, Bell, Download, Map, PlusCircle, Search, Settings, Shield, Pencil, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function Kbd({ children }: { children: React.ReactNode }) {
@@ -73,6 +73,26 @@ export default function HelpPage() {
           <p className="mt-3 text-slate-500">If the end date is before the start date they are swapped automatically.</p>
         </Section>
 
+        {/* Upcoming & currently traveling */}
+        <Section icon={Plane} title="Upcoming trips & currently traveling">
+          <div className="space-y-3">
+            <p><span className="font-medium text-slate-800">Upcoming trips —</span> any entry with a start date in the future appears in a collapsible section above the filters. Each trip shows the destination, how many days away it is, and an Options button to edit or delete.</p>
+            <p><span className="font-medium text-slate-800">Currently traveling —</span> if today falls within an entry's date range a green banner appears at the top showing where you are and how many days remain.</p>
+          </div>
+        </Section>
+
+        {/* Notifications */}
+        <Section icon={Bell} title="Notifications">
+          <p className="mb-3">The bell icon in the header shows a badge when there is something worth your attention. Click it to see the full list.</p>
+          <div className="rounded-xl border border-slate-100 bg-slate-50/60">
+            <Row label="Milestones">A travel milestone you just unlocked (e.g. 10 countries, 100 nights abroad). Tap <Kbd>Clear notifications</Kbd> to dismiss once you've seen them.</Row>
+            <Row label="Upcoming">A trip is starting within the next 7 days.</Row>
+            <Row label="Long trip">An upcoming trip is 14 nights or longer.</Row>
+            <Row label="Data">One or more past entries are missing an end date.</Row>
+            <Row label="Anniversary">Today is the same date as a past trip — e.g. "3 years ago today: Japan".</Row>
+          </div>
+        </Section>
+
         {/* Editing and deleting */}
         <Section icon={Pencil} title="Editing and deleting">
           <div className="space-y-3">
@@ -99,11 +119,11 @@ export default function HelpPage() {
             {[
               {
                 name: "Timeline",
-                desc: "Entries grouped by year then month, newest first. The first two years expand by default — click any year heading to toggle it.",
+                desc: "Entries grouped by year then month, newest first. The current year expands automatically — click any year heading to expand or collapse it.",
               },
               {
                 name: "Table",
-                desc: "Scrollable table of all filtered entries. Click the From date header to toggle sort order. Tick rows to bulk-delete.",
+                desc: "On desktop: a sortable table of all filtered entries. Click the From date header to toggle sort order. Tick rows to bulk-delete. On mobile: a compact card list showing the same data.",
               },
               {
                 name: "Map",
@@ -111,7 +131,7 @@ export default function HelpPage() {
               },
               {
                 name: "Insights",
-                desc: "Summary of your travel history — trips, countries, continents, nights abroad, top destinations, busiest months, and milestone badges.",
+                desc: "Summary of your travel history — trips, countries, continents, nights abroad, top destinations, busiest months, and 25 milestone badges.",
               },
             ].map(({ name, desc }) => (
               <div key={name} className="flex gap-3">
