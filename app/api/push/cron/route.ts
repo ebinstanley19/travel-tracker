@@ -59,13 +59,13 @@ export async function GET(request: Request) {
     return Response.json({ error: "Server misconfiguration: SUPABASE_SERVICE_ROLE_KEY is not set." }, { status: 500 });
   }
 
-  if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY || !process.env.VAPID_SUBJECT) {
+  if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY || !process.env.VAPID_SUBJECT) {
     return Response.json({ error: "Server misconfiguration: VAPID keys not set." }, { status: 500 });
   }
 
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT,
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY,
   );
 
