@@ -20,7 +20,7 @@ interface FiltersCardProps {
 }
 
 const labelCls = "text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500";
-const controlCls = "mt-2 h-11 w-full rounded-2xl border-slate-200/80 bg-white/80 shadow-none";
+const controlCls = "mt-2 h-11 rounded-2xl border-slate-200/80 bg-white/80 shadow-none";
 
 export function FiltersCard({
   search,
@@ -96,7 +96,7 @@ export function FiltersCard({
           <div className="sm:flex-1 min-w-0">
             <Label className={labelCls}>Country</Label>
             <Select value={countryFilter} onValueChange={onCountryChange}>
-              <SelectTrigger className={controlCls}><SelectValue placeholder="All countries" /></SelectTrigger>
+              <SelectTrigger className={`w-full ${controlCls}`}><SelectValue placeholder="All countries" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All countries</SelectItem>
                 {countries.map((c) => (
@@ -108,7 +108,7 @@ export function FiltersCard({
           <div className="sm:flex-1 min-w-0">
             <Label className={labelCls}>Year</Label>
             <Select value={yearFilter} onValueChange={onYearChange}>
-              <SelectTrigger className={controlCls}><SelectValue placeholder="All years" /></SelectTrigger>
+              <SelectTrigger className={`w-full ${controlCls}`}><SelectValue placeholder="All years" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All years</SelectItem>
                 {years.map((y) => (
