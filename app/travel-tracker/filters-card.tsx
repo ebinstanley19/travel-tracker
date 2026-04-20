@@ -20,7 +20,7 @@ interface FiltersCardProps {
 }
 
 const labelCls = "text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500";
-const controlCls = "mt-2 h-11 rounded-2xl border-slate-200/80 bg-white/80 shadow-none";
+const controlCls = "mt-2 h-11 w-full rounded-2xl border-slate-200/80 bg-white/80 shadow-none";
 
 export function FiltersCard({
   search,
