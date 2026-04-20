@@ -94,18 +94,18 @@ function VisaModal({
               placeholder="e.g. Tourist, Work, Student"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-3">
             <div className="space-y-2">
               <Label>Entry date</Label>
-              <Input type="date" value={form.entryDate} onChange={(e) => onChange({ ...form, entryDate: e.target.value })} />
+              <Input type="date" value={form.entryDate} onChange={(e) => onChange({ ...form, entryDate: e.target.value })} className="w-full" />
             </div>
             <div className="space-y-2">
               <Label>Exit date</Label>
-              <Input type="date" value={form.exitDate} onChange={(e) => onChange({ ...form, exitDate: e.target.value })} />
+              <Input type="date" value={form.exitDate} onChange={(e) => onChange({ ...form, exitDate: e.target.value })} className="w-full" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="min-w-0 space-y-2">
               <Label>Max stay (days)</Label>
               <Input
                 type="number"
@@ -115,9 +115,9 @@ function VisaModal({
                 placeholder="e.g. 90"
               />
             </div>
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Label>Visa expiry date</Label>
-              <Input type="date" value={form.expiryDate} onChange={(e) => onChange({ ...form, expiryDate: e.target.value })} />
+              <Input type="date" value={form.expiryDate} onChange={(e) => onChange({ ...form, expiryDate: e.target.value })} className="w-full" />
             </div>
           </div>
           <div className="space-y-2">

@@ -117,7 +117,7 @@ export function FiltersCard({
               </SelectContent>
             </Select>
           </div>
-          <div className="sm:flex-1 min-w-0">
+          <div className="col-span-2 sm:flex-1 min-w-0">
             <Label className={labelCls}>From date</Label>
             <Input
               type="date"
@@ -126,7 +126,7 @@ export function FiltersCard({
               className={controlCls}
             />
           </div>
-          <div className="sm:flex-1 min-w-0">
+          <div className="col-span-2 sm:flex-1 min-w-0">
             <Label className={labelCls}>To date</Label>
             <Input
               type="date"
