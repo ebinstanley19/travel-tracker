@@ -113,6 +113,7 @@ Click **Settings** in the top toolbar to open the settings menu.
 - **Theme** — choose Sand (warm), Ocean (blue), or Sunset (warm-dark). Your preference is saved in the browser.
 - **Download template** — downloads the Excel import template.
 - **Profile** — opens the profile settings page.
+- **Enable push alerts / Disable push alerts** — subscribes or unsubscribes your device from daily push notifications. The app must be added to your home screen (PWA) for this to work on iOS. Requires iOS 16.4+ or a modern Android browser.
 - **Log out** — signs you out on all devices.
 
 ---

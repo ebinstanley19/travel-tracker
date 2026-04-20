@@ -174,6 +174,7 @@ export default function HelpPage() {
             <Row label="Date format">DD MMM YYYY or MMM DD, YYYY — applied across all views.</Row>
             <Row label="Default view">Which tab opens when you sign in.</Row>
             <Row label="Home country">Pre-fills "From country" and is excluded from the Top country stat.</Row>
+            <Row label="Push alerts">Enable or disable daily push notifications from Settings. The app must be added to your home screen first. Requires iOS 16.4+ or a modern Android browser.</Row>
             <Row label="Password">Change via Settings → Profile → Reset Password.</Row>
             <Row label="Delete account">Permanently removes all trips and your account. Cannot be undone.</Row>
           </div>

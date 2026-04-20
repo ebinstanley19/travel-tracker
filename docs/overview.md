@@ -46,3 +46,4 @@ Route Book is a private travel history tracker. It lets you log every trip you'v
 - Account deletion with full data cleanup
 - Monthly automated email backup (Excel attachment via Mailjet)
 - PWA — installable on iOS and Android
+- Web Push Notifications — daily trip reminders delivered to your device even when the app is closed (iOS 16.4+, Android)
