@@ -40,11 +40,16 @@ export default function TravelHistoryTrackerApp() {
   const [activeUpcomingOptionsId, setActiveUpcomingOptionsId] = useState<string | null>(null);
   const [upcomingExpanded, setUpcomingExpanded] = useState(true);
   const [seenMilestoneIds, setSeenMilestoneIds] = useState<Set<string>>(new Set());
+  const [dismissedNotifIds, setDismissedNotifIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem("routebook-seen-milestones");
       if (stored) setSeenMilestoneIds(new Set(JSON.parse(stored) as string[]));
+    } catch {}
+    try {
+      const stored = localStorage.getItem("routebook-dismissed-notifications");
+      if (stored) setDismissedNotifIds(new Set(JSON.parse(stored) as string[]));
     } catch {}
   }, []);
 
@@ -56,6 +61,7 @@ export default function TravelHistoryTrackerApp() {
   const notifications = useMemo(() => {
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
+    const currentYear = today.getFullYear();
     const items: { id: string; icon: string; title: string; tag: string }[] = [];
 
     for (const m of newMilestones) {
@@ -80,30 +86,37 @@ export default function TravelHistoryTrackerApp() {
 
     const incomplete = travelEntries.entries.filter((e) => (!e.date || e.date <= todayStr) && !e.endDate);
     if (incomplete.length > 0) {
-      items.push({ id: "incomplete", icon: "⚠️", title: `${incomplete.length} past entr${incomplete.length !== 1 ? "ies" : "y"} missing an end date`, tag: "Data" });
+      items.push({ id: `incomplete-${incomplete.length}`, icon: "⚠️", title: `${incomplete.length} past entr${incomplete.length !== 1 ? "ies" : "y"} missing an end date`, tag: "Data" });
     }
 
     const todayMonth = today.getMonth();
     const todayDay = today.getDate();
-    const currentYear = today.getFullYear();
     for (const entry of travelEntries.entries) {
       if (!entry.date || entry.date > todayStr) continue;
       const d = new Date(entry.date);
       if (d.getMonth() === todayMonth && d.getDate() === todayDay && d.getFullYear() !== currentYear) {
         const yearsAgo = currentYear - d.getFullYear();
         const dest = getCountryFromLocation(entry.to) || entry.country || entry.to || "Unknown";
-        items.push({ id: `anniversary-${entry.id}`, icon: "📸", title: `${yearsAgo} year${yearsAgo !== 1 ? "s" : ""} ago today: ${dest}`, tag: "Anniversary" });
+        // Year suffix ensures the anniversary reappears each new year
+        items.push({ id: `anniversary-${entry.id}-${currentYear}`, icon: "📸", title: `${yearsAgo} year${yearsAgo !== 1 ? "s" : ""} ago today: ${dest}`, tag: "Anniversary" });
       }
     }
 
-    return items;
-  }, [newMilestones, filters.upcomingEntries, travelEntries.entries]);
+    return items.filter((n) => !dismissedNotifIds.has(n.id));
+  }, [newMilestones, filters.upcomingEntries, travelEntries.entries, dismissedNotifIds]);
 
-  function markMilestonesSeen() {
+  function clearAllNotifications() {
     const allAchievedIds = computeMilestones(travelEntries.entries).filter((m) => m.achieved).map((m) => m.id);
-    const next = new Set([...seenMilestoneIds, ...allAchievedIds]);
-    setSeenMilestoneIds(next);
-    try { localStorage.setItem("routebook-seen-milestones", JSON.stringify([...next])); } catch {}
+    const nextMilestones = new Set([...seenMilestoneIds, ...allAchievedIds]);
+    setSeenMilestoneIds(nextMilestones);
+    try { localStorage.setItem("routebook-seen-milestones", JSON.stringify([...nextMilestones])); } catch {}
+
+    const currentIds = notifications.map((n) => n.id);
+    const nextDismissed = new Set([...dismissedNotifIds, ...currentIds]);
+    setDismissedNotifIds(nextDismissed);
+    try { localStorage.setItem("routebook-dismissed-notifications", JSON.stringify([...nextDismissed])); } catch {}
+
+    setNotifOpen(false);
   }
   const logoSrc = `/logo-${LOGO_VARIANT}.svg`;
 
@@ -267,7 +280,7 @@ export default function TravelHistoryTrackerApp() {
                   )}
                   {newMilestones.length > 0 && (
                     <div className="border-t border-slate-100 px-4 py-3">
-                      <button type="button" onClick={markMilestonesSeen} className="text-xs font-semibold text-slate-500 hover:text-slate-700">
+                      <button type="button" onClick={clearAllNotifications} className="text-xs font-semibold text-slate-500 hover:text-slate-700">
                         Clear notifications
                       </button>
                     </div>
@@ -318,7 +331,7 @@ export default function TravelHistoryTrackerApp() {
                   )}
                   {newMilestones.length > 0 && (
                     <div className="border-t border-slate-100 px-4 py-3">
-                      <button type="button" onClick={markMilestonesSeen} className="text-xs font-semibold text-slate-500 hover:text-slate-700">
+                      <button type="button" onClick={clearAllNotifications} className="text-xs font-semibold text-slate-500 hover:text-slate-700">
                         Clear notifications
                       </button>
                     </div>
