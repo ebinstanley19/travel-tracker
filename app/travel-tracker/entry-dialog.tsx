@@ -94,7 +94,7 @@ export function EntryDialog({
                 value={form.fromCountry || ""}
                 onValueChange={(value) => onFormChange({ ...form, fromCountry: value })}
               >
-                <SelectTrigger className="h-11">
+                <SelectTrigger className="h-11 w-full">
                   <SelectValue placeholder="Select departure country" />
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
@@ -112,7 +112,7 @@ export function EntryDialog({
                 value={form.toCountry || ""}
                 onValueChange={(value) => onFormChange({ ...form, toCountry: value })}
               >
-                <SelectTrigger className="h-11">
+                <SelectTrigger className="h-11 w-full">
                   <SelectValue placeholder="Select destination country" />
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
