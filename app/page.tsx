@@ -580,6 +580,7 @@ export default function TravelHistoryTrackerApp() {
             <TableView
               entries={filters.filtered}
               onDeleteSelected={travelEntries.deleteSelectedEntries}
+              onEdit={travelEntries.openEditModal}
               deletingSelected={travelEntries.deletingSelected}
             />
           </TabsContent>

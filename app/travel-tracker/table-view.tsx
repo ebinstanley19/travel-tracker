@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowUpDown, Trash2 } from "lucide-react";
+import { ArrowUpDown, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDateFormat } from "@/app/travel-tracker/hooks/use-date-format";
@@ -9,13 +9,14 @@ import { displayLocation, formatMonth, formatYear, prettyDateWithFormat } from "
 interface TableViewProps {
   entries: TravelEntry[];
   onDeleteSelected: (ids: string[]) => void;
+  onEdit?: (entry: TravelEntry) => void;
   deletingSelected?: boolean;
 }
 
 type SortDirection = "asc" | "desc";
 
 
-export function TableView({ entries, onDeleteSelected, deletingSelected = false }: TableViewProps) {
+export function TableView({ entries, onDeleteSelected, onEdit, deletingSelected = false }: TableViewProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const dateFormat = useDateFormat();
@@ -119,6 +120,16 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
                     <p className="truncate text-xs text-slate-400">{entry.notes}</p>
                   )}
                 </div>
+                {onEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(entry)}
+                    className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    aria-label="Edit entry"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             ))
           )}
@@ -127,7 +138,7 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
         {/* Desktop table layout */}
         <div className="hidden md:block w-full overflow-x-auto overscroll-x-contain [scrollbar-width:thin] [-webkit-overflow-scrolling:touch]">
           <div className="min-w-[1160px]">
-            <div className="grid grid-cols-[40px_repeat(8,minmax(0,1fr))] gap-3 border-b border-slate-200/80 bg-[linear-gradient(135deg,rgba(16,33,58,0.98),rgba(48,89,152,0.92))] px-5 py-4 text-xs font-semibold uppercase tracking-[0.22em] text-white/85">
+            <div className="grid grid-cols-[40px_repeat(8,minmax(0,1fr))_36px] gap-3 border-b border-slate-200/80 bg-[linear-gradient(135deg,rgba(16,33,58,0.98),rgba(48,89,152,0.92))] px-5 py-4 text-xs font-semibold uppercase tracking-[0.22em] text-white/85">
               <div />
               <button type="button" onClick={toggleDateSort} className="flex items-center gap-1 text-left hover:text-white" aria-label={`Sort by From Date. ${dateSortLabel()}`}>
                 <span>From Date</span>
@@ -141,9 +152,10 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
               <div>To</div>
               <div>City</div>
               <div>Purpose</div>
+              <div />
             </div>
             {sortedEntries.map((entry) => (
-              <div key={entry.id} className="grid grid-cols-[40px_repeat(8,minmax(0,1fr))] gap-3 border-b border-slate-200/70 px-5 py-4 text-sm text-slate-700 transition-colors hover:bg-slate-50/80">
+              <div key={entry.id} className="grid grid-cols-[40px_repeat(8,minmax(0,1fr))_36px] gap-3 border-b border-slate-200/70 px-5 py-4 text-sm text-slate-700 transition-colors hover:bg-slate-50/80">
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -161,6 +173,18 @@ export function TableView({ entries, onDeleteSelected, deletingSelected = false 
                 <div>{displayLocation(entry.to)}</div>
                 <div>{entry.purpose || "-"}</div>
                 <div>{entry.notes || "-"}</div>
+                <div className="flex items-center justify-end">
+                  {onEdit && (
+                    <button
+                      type="button"
+                      onClick={() => onEdit(entry)}
+                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                      aria-label="Edit entry"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
